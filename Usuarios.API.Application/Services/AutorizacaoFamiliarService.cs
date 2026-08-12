@@ -1,7 +1,8 @@
-﻿using GestaoTarefas.API.Application.Interfaces;
+﻿using GestaoTarefas.Application.Interfaces;
+using GestaoTarefas.Domain.Enum;
 using GestaoTarefas.Domain.Interfaces;
 
-namespace GestaoTarefas.API.Application.Services;
+namespace GestaoTarefas.Application.Services;
 
 public class AutorizacaoFamiliarService : IAutorizacaoFamiliarService
 {
@@ -14,7 +15,7 @@ public class AutorizacaoFamiliarService : IAutorizacaoFamiliarService
     }
     public async Task<bool> PodeAcessarFilhoAsync(int filhoId)
     {
-        if (_currentUser.Perfil == "Filho")
+        if (_currentUser.Perfil == PerfilUsuarioEnum.Filho)
         {
             return _currentUser.UsuarioId == filhoId;
         }

@@ -38,6 +38,11 @@ public class RecompensaController : ControllerBase
 
         if (!recompensas.Sucesso)
         {
+            if (recompensas.StatusCode == HttpStatusCode.Forbidden)
+            {
+                return StatusCode((int)HttpStatusCode.Forbidden, recompensas);
+            }
+
             return StatusCode((int)HttpStatusCode.BadRequest, recompensas);
         }
 
@@ -58,6 +63,11 @@ public class RecompensaController : ControllerBase
 
         if (!recompensa.Sucesso)
         {
+            if (recompensa.StatusCode == HttpStatusCode.Forbidden)
+            {
+                return StatusCode((int)HttpStatusCode.Forbidden, recompensa);
+            }
+
             return StatusCode((int)HttpStatusCode.BadRequest, recompensa);
         }
 
@@ -71,13 +81,18 @@ public class RecompensaController : ControllerBase
     /// <returns>Resultado da operação</returns>
     [HttpPost]
     [Route("Criar")]
-    [Authorize(Roles = "Pai,Filho")]
+    [Authorize(Roles = "Pai")]
     public async Task<IActionResult> Criar([FromBody] CriarRecompensaDto dto)
     {
         var recompensa = await _recompensaService.CriarAsync(dto);
 
         if (!recompensa.Sucesso)
         {
+            if (recompensa.StatusCode == HttpStatusCode.Forbidden)
+            {
+                return StatusCode((int)HttpStatusCode.Forbidden, recompensa);
+            }
+
             return StatusCode((int)HttpStatusCode.BadRequest, recompensa);
         }
 
@@ -91,13 +106,18 @@ public class RecompensaController : ControllerBase
     /// <returns>Resultado da operação</returns>
     [HttpPut]
     [Route("Atualizar/{id}")]
-    [Authorize(Roles = "Pai,Filho")]
+    [Authorize(Roles = "Pai")]
     public async Task<IActionResult> Atualizar(int id, [FromBody] CriarRecompensaDto dto)
     {
         var atualizado = await _recompensaService.AtualizarAsync(id, dto);
 
         if (!atualizado.Sucesso)
         {
+            if (atualizado.StatusCode == HttpStatusCode.Forbidden)
+            {
+                return StatusCode((int)HttpStatusCode.Forbidden, atualizado);
+            }
+
             return StatusCode((int)HttpStatusCode.BadRequest, atualizado);
         }
 
@@ -111,13 +131,18 @@ public class RecompensaController : ControllerBase
     /// <returns>Resultado da operação</returns>
     [HttpDelete]
     [Route("Remover/{id}")]
-    [Authorize(Roles = "Pai,Filho")]
+    [Authorize(Roles = "Pai")]
     public async Task<IActionResult> Remover(int id)
     {
         var removido = await _recompensaService.RemoverAsync(id);
 
         if (!removido.Sucesso)
         {
+            if (removido.StatusCode == HttpStatusCode.Forbidden)
+            {
+                return StatusCode((int)HttpStatusCode.Forbidden, removido);
+            }
+
             return StatusCode((int)HttpStatusCode.BadRequest, removido);
         }
 
@@ -139,6 +164,11 @@ public class RecompensaController : ControllerBase
 
         if (!resgatada.Sucesso)
         {
+            if (resgatada.StatusCode == HttpStatusCode.Forbidden)
+            {
+                return StatusCode((int)HttpStatusCode.Forbidden, resgatada);
+            }
+
             return StatusCode((int)HttpStatusCode.BadRequest, resgatada);
         }
 
@@ -158,6 +188,11 @@ public class RecompensaController : ControllerBase
 
         if (!resgatadas.Sucesso)
         {
+            if (resgatadas.StatusCode == HttpStatusCode.Forbidden)
+            {
+                return StatusCode((int)HttpStatusCode.Forbidden, resgatadas);
+            }
+
             return StatusCode((int)HttpStatusCode.BadRequest, resgatadas);
         }
 

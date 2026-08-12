@@ -1,5 +1,4 @@
 ﻿using System.Net;
-using GestaoTarefas.API.Application.Interfaces;
 using GestaoTarefas.Application.Common.Responses;
 using GestaoTarefas.Application.DTOs.Recompensa;
 using GestaoTarefas.Application.Interfaces;
@@ -178,6 +177,16 @@ public class RecompensaService : IRecompensaService
                 Sucesso = false,
                 StatusCode = HttpStatusCode.Forbidden,
                 Mensagem = "Você não tem permissão para editar esta recompensa"
+            };
+        }
+
+        if (dto.FilhoId != recompensa.FilhoId && !await _autorizacao.PodeAcessarFilhoAsync(dto.FilhoId))
+        {
+            return new RespostaMetodos<RetornoRecompensaDto>
+            {
+                Sucesso = false,
+                StatusCode = HttpStatusCode.Forbidden,
+                Mensagem = "Você não pode mover esta recompensa para um filho que não é vinculado a você"
             };
         }
 

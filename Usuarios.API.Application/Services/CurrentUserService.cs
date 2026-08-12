@@ -1,8 +1,9 @@
 ﻿using System.Security.Claims;
-using GestaoTarefas.API.Application.Interfaces;
+using GestaoTarefas.Application.Interfaces;
+using GestaoTarefas.Domain.Enum;
 using Microsoft.AspNetCore.Http;
 
-namespace GestaoTarefas.API.Application.Services;
+namespace GestaoTarefas.Application.Services;
 
 public class CurrentUserService : ICurrentUserService
 {
@@ -21,5 +22,12 @@ public class CurrentUserService : ICurrentUserService
         }
     }
 
-    public string Perfil => _httpContextAccessor.HttpContext?.User.FindFirstValue(ClaimTypes.Role) ?? throw new UnauthorizedAccessException("Usuário não autenticado.");
+    public PerfilUsuarioEnum Perfil
+    {
+        get
+        {
+            var valor = _httpContextAccessor.HttpContext?.User.FindFirstValue(ClaimTypes.Role);
+            return Enum.TryParse<PerfilUsuarioEnum>(valor, out var perfil) ? perfil : throw new UnauthorizedAccessException("Usuário não autenticado.");
+        }
+    }
 }

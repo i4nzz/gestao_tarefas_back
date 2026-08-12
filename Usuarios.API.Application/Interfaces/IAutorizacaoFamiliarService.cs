@@ -1,4 +1,4 @@
-﻿namespace GestaoTarefas.API.Application.Interfaces;
+﻿namespace GestaoTarefas.Application.Interfaces;
 
 public interface IAutorizacaoFamiliarService
 {

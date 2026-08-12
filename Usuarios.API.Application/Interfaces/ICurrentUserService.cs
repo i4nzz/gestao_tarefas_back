@@ -1,7 +1,9 @@
-﻿namespace GestaoTarefas.API.Application.Interfaces;
+﻿using GestaoTarefas.Domain.Enum;
+
+namespace GestaoTarefas.Application.Interfaces;
 
 public interface ICurrentUserService
 {
     int UsuarioId { get; }
-    string Perfil { get; }
+    PerfilUsuarioEnum Perfil { get; }
 }

@@ -16,20 +16,20 @@ public class ComprovacaoService : IComprovacaoService
     private readonly IPontuacaoRepository _pontuacaoRepository;
 
     private readonly IFileStorageService _fileStorageService;
-    private readonly IUsuarioRepository _usuarioRepository;
+    private readonly IAutorizacaoFamiliarService _autorizacao;
     public ComprovacaoService(
         IComprovacaoRepository comprovacaoRepository
         , IPontuacaoRepository pontuacaoRepository
         , ITarefaRepository tarefaRepository
         , IFileStorageService fileStorageService
-        , IUsuarioRepository usuarioRepository
+        , IAutorizacaoFamiliarService autorizacao
         )
     {
         _comprovacaoRepository = comprovacaoRepository;
         _tarefaRepository = tarefaRepository;
         _pontuacaoRepository = pontuacaoRepository;
         _fileStorageService = fileStorageService;
-        _usuarioRepository = usuarioRepository;
+        _autorizacao = autorizacao;
     }
 
     public async Task<RespostaMetodos<IEnumerable<RetornoComprovacaoDto>>> ObterPorTarefaAsync(int tarefaId)
@@ -77,7 +77,7 @@ public class ComprovacaoService : IComprovacaoService
         };
     }
 
-    public async Task<RespostaMetodos<(byte[] Conteudo, string ContentType)?>> ObterFotoAsync(int comprovacaoId, int usuarioId, string perfil)
+    public async Task<RespostaMetodos<(byte[] Conteudo, string ContentType)?>> ObterFotoAsync(int comprovacaoId)
     {
         var comprovacao = await _comprovacaoRepository.ObterPorIdAsync(comprovacaoId);
 
@@ -101,11 +101,7 @@ public class ComprovacaoService : IComprovacaoService
             };
         }
 
-        var autorizado = perfil == "Filho"
-            ? tarefa.FilhoId == usuarioId
-            : await _usuarioRepository.ExisteVinculoAsync(usuarioId, tarefa.FilhoId);
-
-        if (!autorizado)
+        if (!await _autorizacao.PodeAcessarFilhoAsync(tarefa.FilhoId))
         {
             return new RespostaMetodos<(byte[], string)?>
             {

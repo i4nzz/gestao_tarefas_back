@@ -1,5 +1,4 @@
 ﻿using System.Net;
-using GestaoTarefas.API.Application.Interfaces;
 using GestaoTarefas.Application.Common.Responses;
 using GestaoTarefas.Application.DTOs.Pontuacao;
 using GestaoTarefas.Application.Interfaces;
@@ -129,6 +128,15 @@ public class PontuacaoService : IPontuacaoService
             };
         }
 
+        if (tarefa.FilhoId != dto.FilhoId)
+        {
+            return new RespostaMetodos<RetornoPontuacaoDto>
+            {
+                Sucesso = false,
+                ObjetoRetorno = null,
+                Mensagem = "A tarefa informada não pertence ao filho informado"
+            };
+        }
 
         var pontuacao = Pontuacao.CriarGanho(dto.FilhoId, dto.TarefaId, dto.Pontos);
 

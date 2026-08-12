@@ -1,5 +1,4 @@
 ﻿using System.Net;
-using System.Security.Claims;
 using GestaoTarefas.Application.DTOs.Recompensa;
 using GestaoTarefas.Application.Interfaces;
 using Microsoft.AspNetCore.Authorization;
@@ -92,10 +91,7 @@ public class ComprovacaoTarefaController : ControllerBase
     [Authorize(Roles = "Pai,Filho")]
     public async Task<IActionResult> ObterFoto(int id)
     {
-        var usuarioId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!); // validar e entender isso aqui
-        var perfil = User.FindFirstValue(ClaimTypes.Role)!;                         // validar e entender isso aqui depois.
-
-        var resultado = await _comprovacaoTarefaService.ObterFotoAsync(id, usuarioId, perfil);
+        var resultado = await _comprovacaoTarefaService.ObterFotoAsync(id);
 
         if (!resultado.Sucesso || resultado.ObjetoRetorno == null)
         {

@@ -39,6 +39,11 @@ public class PontuacaoController : ControllerBase
 
         if (!pontuacoes.Sucesso)
         {
+            if (pontuacoes.StatusCode == HttpStatusCode.Forbidden)
+            {
+                return StatusCode((int)HttpStatusCode.Forbidden, pontuacoes);
+            }
+
             return StatusCode((int)HttpStatusCode.NoContent, pontuacoes);
         }
 
@@ -59,6 +64,11 @@ public class PontuacaoController : ControllerBase
 
         if (!total.Sucesso)
         {
+            if (total.StatusCode == HttpStatusCode.Forbidden)
+            {
+                return StatusCode((int)HttpStatusCode.Forbidden, total.Mensagem);
+            }
+
             return StatusCode((int)HttpStatusCode.NoContent, total.Mensagem);
         }
 
@@ -79,6 +89,11 @@ public class PontuacaoController : ControllerBase
 
         if (!pontuacao.Sucesso)
         {
+            if (pontuacao.StatusCode == HttpStatusCode.Forbidden)
+            {
+                return StatusCode((int)HttpStatusCode.Forbidden, pontuacao.Mensagem);
+            }
+
             return StatusCode((int)HttpStatusCode.BadRequest, pontuacao.Mensagem);
         }
 

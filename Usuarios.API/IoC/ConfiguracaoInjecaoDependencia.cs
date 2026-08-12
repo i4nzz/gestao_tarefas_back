@@ -1,5 +1,3 @@
-using GestaoTarefas.API.Application.Interfaces;
-using GestaoTarefas.API.Application.Services;
 using GestaoTarefas.Application.Interfaces;
 using GestaoTarefas.Application.Services;
 using GestaoTarefas.Domain.Interfaces;
@@ -8,7 +6,7 @@ using GestaoTarefas.Infra.Repositories;
 namespace GestaoTarefas.Ioc;
 
 /// <summary>
-/// Classe para configurar a injeção de dependência dos serviços e repositórios da aplicação, registrando as implementações concretas para as interfaces correspondentes. Essa configuração é essencial para garantir que as dependências sejam resolvidas corretamente em tempo de execução, permitindo a inversão de controle e facilitando a manutenção e testabilidade do código.
+/// Classe para configurar a injeï¿½ï¿½o de dependï¿½ncia dos serviï¿½os e repositï¿½rios da aplicaï¿½ï¿½o, registrando as implementaï¿½ï¿½es concretas para as interfaces correspondentes. Essa configuraï¿½ï¿½o ï¿½ essencial para garantir que as dependï¿½ncias sejam resolvidas corretamente em tempo de execuï¿½ï¿½o, permitindo a inversï¿½o de controle e facilitando a manutenï¿½ï¿½o e testabilidade do cï¿½digo.
 /// </summary>
 public static class ConfiguracaoInjecaoDeDependencia
 {
