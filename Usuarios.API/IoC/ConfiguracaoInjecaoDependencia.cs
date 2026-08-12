@@ -29,6 +29,9 @@ public static class ConfiguracaoInjecaoDeDependencia
         services.AddScoped<IFileStorageService, LocalFileStorageService>();
         services.AddScoped<ICurrentUserService, CurrentUserService>();
         services.AddScoped<IAutorizacaoFamiliarService, AutorizacaoFamiliarService>();
+        services.AddScoped<ICategoriaFinanceiraService, CategoriaFinanceiraService>();
+        services.AddScoped<IMesadaService, MesadaService>();
+        services.AddScoped<IRegistroFinanceiroService, RegistroFinanceiroService>();
         #endregion
 
         #region Repositories
@@ -39,6 +42,9 @@ public static class ConfiguracaoInjecaoDeDependencia
         services.AddScoped<IComprovacaoRepository, ComprovacaoRepository>();
         services.AddScoped<IResgatePontuacaoRepository, ResgatePontuacaoRepository>();
         services.AddScoped<IRefreshTokenRepository, RefreshTokenRepository>();
+        services.AddScoped<ICategoriaFinanceiraRepository, CategoriaFinanceiraRepository>();
+        services.AddScoped<IMesadaRepository, MesadaRepository>();
+        services.AddScoped<IRegistroFinanceiroRepository, RegistroFinanceiroRepository>();
         #endregion
 
         return services;
