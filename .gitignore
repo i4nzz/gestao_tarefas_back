@@ -55,3 +55,8 @@ publish/
 Usuarios.API/Program.cs
 
 Usuarios.API/StorageFiles
+
+##############################################
+# Handoff / documentação de sessão (não versionar)
+##############################################
+Handoff/
