@@ -8,7 +8,7 @@ using Microsoft.AspNetCore.Http;
 using Moq;
 using Xunit;
 
-namespace Usuarios.API.Tests;
+namespace GestaoTarefas.Tests;
 
 public class ComprovacaoServiceTests
 {

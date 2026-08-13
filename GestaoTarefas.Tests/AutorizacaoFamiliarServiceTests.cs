@@ -5,7 +5,7 @@ using GestaoTarefas.Domain.Interfaces;
 using Moq;
 using Xunit;
 
-namespace Usuarios.API.Tests;
+namespace GestaoTarefas.Tests;
 
 public class AutorizacaoFamiliarServiceTests
 {

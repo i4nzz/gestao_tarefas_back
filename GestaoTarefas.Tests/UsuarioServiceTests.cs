@@ -9,7 +9,7 @@ using Microsoft.Extensions.Configuration;
 using Moq;
 using Xunit;
 
-namespace Usuarios.API.Tests;
+namespace GestaoTarefas.Tests;
 
 public class UsuarioServiceTests
 {

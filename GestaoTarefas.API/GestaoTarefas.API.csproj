@@ -20,9 +20,9 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<ProjectReference Include="..\Usuarios.API.Application\GestaoTarefas.API.Application.csproj" />
-		<ProjectReference Include="..\Usuarios.API.Domain\GestaoTarefas.API.Domain.csproj" />
-		<ProjectReference Include="..\Usuarios.API.Infra\GestaoTarefas.API.Infra.csproj" />
+		<ProjectReference Include="..\GestaoTarefas.Application\GestaoTarefas.Application.csproj" />
+		<ProjectReference Include="..\GestaoTarefas.Domain\GestaoTarefas.Domain.csproj" />
+		<ProjectReference Include="..\GestaoTarefas.Infra\GestaoTarefas.Infra.csproj" />
 	</ItemGroup>
 
 </Project>

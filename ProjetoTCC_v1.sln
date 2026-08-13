@@ -3,21 +3,17 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.14.36930.0
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GestaoTarefas.API", "Usuarios.API\GestaoTarefas.API.csproj", "{ED6C7176-1244-4A82-9D38-683C2454ADC3}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GestaoTarefas.API", "GestaoTarefas.API\GestaoTarefas.API.csproj", "{ED6C7176-1244-4A82-9D38-683C2454ADC3}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GestaoTarefas.API.Application", "Usuarios.API.Application\GestaoTarefas.API.Application.csproj", "{6196677B-ABE5-4F64-888B-EDC1CE950AB3}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GestaoTarefas.Application", "GestaoTarefas.Application\GestaoTarefas.Application.csproj", "{6196677B-ABE5-4F64-888B-EDC1CE950AB3}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GestaoTarefas.API.Domain", "Usuarios.API.Domain\GestaoTarefas.API.Domain.csproj", "{F91690A7-A0DE-423F-AB52-CA41962768DC}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GestaoTarefas.Domain", "GestaoTarefas.Domain\GestaoTarefas.Domain.csproj", "{F91690A7-A0DE-423F-AB52-CA41962768DC}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GestaoTarefas.API.Infra", "Usuarios.API.Infra\GestaoTarefas.API.Infra.csproj", "{24B9DA53-A794-48D8-A5F5-6BDCEC87EBA5}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GestaoTarefas.Infra", "GestaoTarefas.Infra\GestaoTarefas.Infra.csproj", "{24B9DA53-A794-48D8-A5F5-6BDCEC87EBA5}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{02EA681E-C7D8-13C7-8484-4AC65E1B71E8}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Usuarios.API.Tests", "Usuarios.API.Tests\Usuarios.API.Tests.csproj", "{AEFECC18-C8F6-4FF0-B814-AC1CBE8438D0}"
-EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Usuarios.API.Application", "Usuarios.API.Application", "{483E171C-ABBD-45AB-4E19-C588A3B57822}"
-EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Usuarios.API.Domain", "Usuarios.API.Domain", "{82114328-E359-8BF2-156E-A4DAE3E227D3}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GestaoTarefas.Tests", "GestaoTarefas.Tests\GestaoTarefas.Tests.csproj", "{AEFECC18-C8F6-4FF0-B814-AC1CBE8438D0}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

@@ -33,7 +33,7 @@ Thumbs.db
 ##############################################
 # Environment / Secrets
 ##############################################
-Usuarios.API/appsettings.json
+GestaoTarefas.API/appsettings.json
 **/appsettings.Development.json
 **/appsettings.Local.json
 .env
@@ -52,9 +52,9 @@ publish/
 ##############################################
 # program
 ##############################################
-Usuarios.API/Program.cs
+GestaoTarefas.API/Program.cs
 
-Usuarios.API/StorageFiles
+GestaoTarefas.API/StorageFiles
 
 ##############################################
 # Handoff / documentação de sessão (não versionar)
