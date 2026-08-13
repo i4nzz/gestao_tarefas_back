@@ -14,12 +14,14 @@ public class PontuacaoServiceTests
         Mock<IUsuarioRepository> usuarioRepository,
         Mock<ITarefaRepository> tarefaRepository,
         Mock<IAutorizacaoFamiliarService> autorizacao,
-        Mock<IPontuacaoRepository>? pontuacaoRepository = null)
+        Mock<IPontuacaoRepository>? pontuacaoRepository = null,
+        Mock<IResgatePontuacaoRepository>? resgatePontuacaoRepository = null)
     {
         return new PontuacaoService(
             (pontuacaoRepository ?? new Mock<IPontuacaoRepository>()).Object,
             usuarioRepository.Object,
             tarefaRepository.Object,
+            (resgatePontuacaoRepository ?? new Mock<IResgatePontuacaoRepository>()).Object,
             autorizacao.Object);
     }
 
@@ -67,5 +69,30 @@ public class PontuacaoServiceTests
 
         Assert.True(resultado.Sucesso);
         pontuacaoRepository.Verify(r => r.AdicionarAsync(It.IsAny<Pontuacao>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task ObterTotalPontosAsync_QuandoSaldoLiquidoEZero_RetornaSucessoComZero()
+    {
+        var autorizacao = new Mock<IAutorizacaoFamiliarService>();
+        autorizacao.Setup(a => a.PodeAcessarFilhoAsync(10)).ReturnsAsync(true);
+
+        var pontuacaoRepository = new Mock<IPontuacaoRepository>();
+        pontuacaoRepository.Setup(r => r.ObterTotalPontosAsync(10)).ReturnsAsync(100);
+
+        var resgatePontuacaoRepository = new Mock<IResgatePontuacaoRepository>();
+        resgatePontuacaoRepository.Setup(r => r.ObterTotalResgatesAsync(10)).ReturnsAsync(100);
+
+        var servico = CriarServico(
+            new Mock<IUsuarioRepository>(),
+            new Mock<ITarefaRepository>(),
+            autorizacao,
+            pontuacaoRepository,
+            resgatePontuacaoRepository);
+
+        var resultado = await servico.ObterTotalPontosAsync(10);
+
+        Assert.True(resultado.Sucesso);
+        Assert.Equal(0, resultado.ObjetoRetorno);
     }
 }

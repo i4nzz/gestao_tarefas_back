@@ -92,4 +92,55 @@ public class RecompensaServiceTests
         Assert.Equal(20, recompensa.FilhoId);
         recompensaRepository.Verify(r => r.AtualizarAsync(recompensa), Times.Once);
     }
+
+    [Fact]
+    public async Task ResgatarAsync_QuandoSaldoSuficiente_DebitaApenasEmResgatePontuacao()
+    {
+        var recompensa = new Recompensa { Id = 1, FilhoId = 10, Descricao = "Bicicleta", PontosNecessarios = 100, Ativa = true };
+
+        var recompensaRepository = new Mock<IRecompensaRepository>();
+        recompensaRepository.Setup(r => r.ObterPorIdAsync(1)).ReturnsAsync(recompensa);
+
+        var autorizacao = new Mock<IAutorizacaoFamiliarService>();
+        autorizacao.Setup(a => a.PodeAcessarFilhoAsync(10)).ReturnsAsync(true);
+
+        var pontuacaoRepository = new Mock<IPontuacaoRepository>();
+        pontuacaoRepository.Setup(r => r.ObterTotalPontosAsync(10)).ReturnsAsync(150);
+
+        var resgatePontuacaoRepository = new Mock<IResgatePontuacaoRepository>();
+        resgatePontuacaoRepository.Setup(r => r.ObterTotalResgatesAsync(10)).ReturnsAsync(0);
+
+        var servico = CriarServico(recompensaRepository, autorizacao, pontuacaoRepository: pontuacaoRepository, resgatePontuacaoRepository: resgatePontuacaoRepository);
+
+        var resultado = await servico.ResgatarAsync(10, 1);
+
+        Assert.True(resultado.Sucesso);
+        pontuacaoRepository.Verify(r => r.AdicionarAsync(It.IsAny<Pontuacao>()), Times.Never);
+        resgatePontuacaoRepository.Verify(r => r.AdicionarAsync(It.IsAny<ResgatePontuacao>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task ResgatarAsync_QuandoSaldoLiquidoInsuficiente_NaoResgata()
+    {
+        var recompensa = new Recompensa { Id = 1, FilhoId = 10, Descricao = "Bicicleta", PontosNecessarios = 100, Ativa = true };
+
+        var recompensaRepository = new Mock<IRecompensaRepository>();
+        recompensaRepository.Setup(r => r.ObterPorIdAsync(1)).ReturnsAsync(recompensa);
+
+        var autorizacao = new Mock<IAutorizacaoFamiliarService>();
+        autorizacao.Setup(a => a.PodeAcessarFilhoAsync(10)).ReturnsAsync(true);
+
+        var pontuacaoRepository = new Mock<IPontuacaoRepository>();
+        pontuacaoRepository.Setup(r => r.ObterTotalPontosAsync(10)).ReturnsAsync(150);
+
+        var resgatePontuacaoRepository = new Mock<IResgatePontuacaoRepository>();
+        resgatePontuacaoRepository.Setup(r => r.ObterTotalResgatesAsync(10)).ReturnsAsync(80);
+
+        var servico = CriarServico(recompensaRepository, autorizacao, pontuacaoRepository: pontuacaoRepository, resgatePontuacaoRepository: resgatePontuacaoRepository);
+
+        var resultado = await servico.ResgatarAsync(10, 1);
+
+        Assert.False(resultado.Sucesso);
+        resgatePontuacaoRepository.Verify(r => r.AdicionarAsync(It.IsAny<ResgatePontuacao>()), Times.Never);
+    }
 }

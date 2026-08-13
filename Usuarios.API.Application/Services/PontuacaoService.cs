@@ -13,17 +13,20 @@ public class PontuacaoService : IPontuacaoService
     private readonly IPontuacaoRepository _pontuacaoRepository;
     private readonly IUsuarioRepository _usuarioRepository;
     private readonly ITarefaRepository _tarefaRepository;
+    private readonly IResgatePontuacaoRepository _resgatePontuacaoRepository;
     private readonly IAutorizacaoFamiliarService _autorizacao;
     public PontuacaoService(
         IPontuacaoRepository pontuacaoRepository
         , IUsuarioRepository usuarioRepository
         , ITarefaRepository tarefaRepository
+        , IResgatePontuacaoRepository resgatePontuacaoRepository
         , IAutorizacaoFamiliarService autorizacao
         )
     {
         _pontuacaoRepository = pontuacaoRepository;
         _usuarioRepository = usuarioRepository;
         _tarefaRepository = tarefaRepository;
+        _resgatePontuacaoRepository = resgatePontuacaoRepository;
         _autorizacao = autorizacao;
     }
 
@@ -72,22 +75,14 @@ public class PontuacaoService : IPontuacaoService
             };
         }
 
-        var totalPontos = await _pontuacaoRepository.ObterTotalPontosAsync(filhoId);
-
-        if (totalPontos <= 0)
-        {
-            return new RespostaMetodos<int>
-            {
-                Sucesso = false,
-                ObjetoRetorno = 0,
-                Mensagem = "Nenhum ponto encontrado"
-            };
-        }
+        var ganhos = await _pontuacaoRepository.ObterTotalPontosAsync(filhoId);
+        var resgates = await _resgatePontuacaoRepository.ObterTotalResgatesAsync(filhoId);
+        var saldo = ganhos - resgates;
 
         return new RespostaMetodos<int>
         {
             Sucesso = true,
-            ObjetoRetorno = totalPontos,
+            ObjetoRetorno = saldo,
             Mensagem = $"Pontos encontrados para o filhoId {filhoId}"
         };
     }
@@ -135,6 +130,16 @@ public class PontuacaoService : IPontuacaoService
                 Sucesso = false,
                 ObjetoRetorno = null,
                 Mensagem = "A tarefa informada não pertence ao filho informado"
+            };
+        }
+
+        if (dto.Pontos <= 0)
+        {
+            return new RespostaMetodos<RetornoPontuacaoDto>
+            {
+                Sucesso = false,
+                ObjetoRetorno = null,
+                Mensagem = "Os pontos devem ser maiores que zero"
             };
         }
 

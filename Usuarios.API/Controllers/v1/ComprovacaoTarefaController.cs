@@ -29,13 +29,15 @@ public class ComprovacaoTarefaController : ControllerBase
     /// <param name="tarefaId">ID da tarefa</param>
     /// <returns>Lista de comprovações da tarefa</returns>
     [HttpGet("tarefa/{tarefaId:int}")]
+    [Authorize(Roles = "Pai,Filho")]
     public async Task<IActionResult> ObterPorTarefa(int tarefaId)
     {
         var resultado = await _comprovacaoTarefaService.ObterPorTarefaAsync(tarefaId);
 
         if (!resultado.Sucesso)
         {
-            return StatusCode((int)HttpStatusCode.BadRequest, resultado.Mensagem);
+            var statusCode = resultado.StatusCode != 0 ? (int)resultado.StatusCode : (int)HttpStatusCode.BadRequest;
+            return StatusCode(statusCode, resultado.Mensagem);
         }
 
         return StatusCode((int)HttpStatusCode.OK, resultado.ObjetoRetorno);
@@ -47,13 +49,15 @@ public class ComprovacaoTarefaController : ControllerBase
     /// <returns>Comprovação da tarefa</returns>
 
     [HttpGet("{id:int}")]
+    [Authorize(Roles = "Pai,Filho")]
     public async Task<IActionResult> ObterPorId(int id)
     {
         var resultado = await _comprovacaoTarefaService.ObterPorIdAsync(id);
 
         if (!resultado.Sucesso)
         {
-            return StatusCode((int)HttpStatusCode.BadRequest, resultado.Mensagem);
+            var statusCode = resultado.StatusCode != 0 ? (int)resultado.StatusCode : (int)HttpStatusCode.BadRequest;
+            return StatusCode(statusCode, resultado.Mensagem);
         }
 
         return StatusCode((int)HttpStatusCode.OK, resultado.ObjetoRetorno);
@@ -78,7 +82,8 @@ public class ComprovacaoTarefaController : ControllerBase
 
         if (!resultado.Sucesso)
         {
-            return StatusCode((int)HttpStatusCode.BadRequest, resultado.Mensagem);
+            var statusCode = resultado.StatusCode != 0 ? (int)resultado.StatusCode : (int)HttpStatusCode.BadRequest;
+            return StatusCode(statusCode, resultado.Mensagem);
         }
 
         return StatusCode((int)HttpStatusCode.OK, resultado.ObjetoRetorno);
@@ -118,7 +123,8 @@ public class ComprovacaoTarefaController : ControllerBase
 
         if (!resultado.Sucesso)
         {
-            return StatusCode((int)HttpStatusCode.BadRequest, resultado.Mensagem);
+            var statusCode = resultado.StatusCode != 0 ? (int)resultado.StatusCode : (int)HttpStatusCode.BadRequest;
+            return StatusCode(statusCode, resultado.Mensagem);
         }
 
         return StatusCode((int)HttpStatusCode.OK, resultado.Mensagem);

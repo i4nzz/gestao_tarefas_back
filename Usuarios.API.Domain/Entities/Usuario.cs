@@ -1,4 +1,6 @@
-﻿using GestaoTarefas.Domain.Enum;
+﻿using System.Security.Cryptography;
+using System.Text;
+using GestaoTarefas.Domain.Enum;
 
 namespace GestaoTarefas.Domain.Entities;
 
@@ -39,7 +41,7 @@ public class Usuario
         if (EmailConfirmado) return true;
 
         if (string.IsNullOrEmpty(TokenConfirmacaoEmail) ||
-            TokenConfirmacaoEmail != token ||
+            !TokensIguais(TokenConfirmacaoEmail, token) ||
             TokenConfirmacaoExpiracao is null ||
             TokenConfirmacaoExpiracao < DateTime.UtcNow)
         {
@@ -63,9 +65,17 @@ public class Usuario
     public bool ValidarTokenResetSenha(string token)
     {
         return !string.IsNullOrEmpty(TokenResetSenha)
-            && TokenResetSenha == token
+            && TokensIguais(TokenResetSenha, token)
             && TokenResetSenhaExpiracao is not null
             && TokenResetSenhaExpiracao >= DateTime.UtcNow;
+    }
+
+    private static bool TokensIguais(string a, string b)
+    {
+        var bytesA = Encoding.UTF8.GetBytes(a);
+        var bytesB = Encoding.UTF8.GetBytes(b);
+
+        return bytesA.Length == bytesB.Length && CryptographicOperations.FixedTimeEquals(bytesA, bytesB);
     }
 
     public void RedefinirSenha(string novaSenhaHash)

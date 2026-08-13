@@ -14,5 +14,6 @@ public interface IUsuarioRepository
     Task<Usuario?> ObterPorTokenConfirmacaoEmailAsync(string token);
     Task<Usuario?> ObterPorTokenResetSenhaAsync(string token);
     Task<bool> ExisteVinculoAsync(int paiId, int filhoId);
+    Task<bool> PossuiVinculoFamiliarAsync(int usuarioId);
 }
 

@@ -19,9 +19,6 @@ public class CriarFilhoDto
     [MaxLength(50, ErrorMessage = "A senha deve ter no máximo 50 caracteres.")]
     public string Senha { get; set; } = string.Empty;
 
-    [Required(ErrorMessage = "O PaiId é obrigatório.")]
-    public int PaiId { get; set; }
-
     [Required(ErrorMessage = "A data de nascimento é obrigatória.")]
     public DateTime DataNascimento { get; set; }
 }

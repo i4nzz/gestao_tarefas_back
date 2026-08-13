@@ -70,6 +70,11 @@ public class UsuarioRepository : IUsuarioRepository
         return await _context.PaisFilhos.AnyAsync(x => x.PaiId == paiId && x.FilhoId == filhoId);
     }
 
+    public async Task<bool> PossuiVinculoFamiliarAsync(int usuarioId)
+    {
+        return await _context.PaisFilhos.AnyAsync(x => x.PaiId == usuarioId || x.FilhoId == usuarioId);
+    }
+
     public async Task<Usuario?> ObterPorEmailAsync(string email)
     {
         return await _context.Usuarios.FirstOrDefaultAsync(u => u.Email == email);

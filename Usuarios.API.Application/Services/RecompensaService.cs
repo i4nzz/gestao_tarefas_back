@@ -1,4 +1,5 @@
 ﻿using System.Net;
+using System.Transactions;
 using GestaoTarefas.Application.Common.Responses;
 using GestaoTarefas.Application.DTOs.Recompensa;
 using GestaoTarefas.Application.Interfaces;
@@ -286,9 +287,11 @@ public class RecompensaService : IRecompensaService
             };
         }
 
-        var totalPontos = await _pontuacaoRepository.ObterTotalPontosAsync(filhoId);
+        var ganhos = await _pontuacaoRepository.ObterTotalPontosAsync(filhoId);
+        var resgates = await _resgatePontuacaoRepository.ObterTotalResgatesAsync(filhoId);
+        var saldoAtual = ganhos - resgates;
 
-        if (totalPontos < recompensa.PontosNecessarios)
+        if (saldoAtual < recompensa.PontosNecessarios)
         {
             return new RespostaMetodos<RetornoRecompensaResgatadaDto>
             {
@@ -299,13 +302,18 @@ public class RecompensaService : IRecompensaService
         }
 
         var resgatada = new RecompensaResgatada(filhoId, recompensaId);
-        await _recompensaRepository.ResgatarAsync(resgatada);
-
-        var debito = Pontuacao.CriarResgate(filhoId, recompensa.PontosNecessarios);
-        await _pontuacaoRepository.AdicionarAsync(debito);
-
         var resgate = ResgatePontuacao.Criar(filhoId, recompensaId, recompensa.PontosNecessarios);
-        await _resgatePontuacaoRepository.AdicionarAsync(resgate);
+
+        using (var transacao = new TransactionScope(
+            TransactionScopeOption.Required,
+            new TransactionOptions { IsolationLevel = IsolationLevel.ReadCommitted },
+            TransactionScopeAsyncFlowOption.Enabled))
+        {
+            await _recompensaRepository.ResgatarAsync(resgatada);
+            await _resgatePontuacaoRepository.AdicionarAsync(resgate);
+
+            transacao.Complete();
+        }
 
         var retornoResgatada = resgatada.ToDto();
 

@@ -24,14 +24,4 @@ public class Pontuacao
             Tipo = TipoPontuacaoEnum.Ganho
         };
     }
-    public static Pontuacao CriarResgate(int filhoId, int pontos)
-    {
-        return new Pontuacao
-        {
-            FilhoId = filhoId,
-            TarefaId = null,
-            Pontos = -pontos,
-            Tipo = TipoPontuacaoEnum.Resgate
-        };
-    }
 }

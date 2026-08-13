@@ -18,19 +18,22 @@ public class UsuarioService : IUsuarioService
     private readonly IRefreshTokenRepository _refreshTokenRepository;
     private readonly IEmailService _emailService;
     private readonly IConfiguration _configuration;
+    private readonly ICurrentUserService _currentUser;
 
     public UsuarioService(
         IUsuarioRepository usuarioRepository,
         ITokenService tokenService,
         IRefreshTokenRepository refreshTokenRepository,
         IEmailService emailService,
-        IConfiguration configuration)
+        IConfiguration configuration,
+        ICurrentUserService currentUser)
     {
         _usuarioRepository = usuarioRepository;
         _tokenService = tokenService;
         _refreshTokenRepository = refreshTokenRepository;
         _emailService = emailService;
         _configuration = configuration;
+        _currentUser = currentUser;
     }
 
     public async Task<RespostaMetodos<IEnumerable<RetornoUsuarioDto>>> ObterTodosAsync()
@@ -245,9 +248,23 @@ public class UsuarioService : IUsuarioService
             };
         }
 
+        if (id != _currentUser.UsuarioId)
+        {
+            return new RespostaMetodos<RetornoUsuarioDto>
+            {
+                Sucesso = false,
+                StatusCode = HttpStatusCode.Forbidden,
+                Mensagem = "Você só pode atualizar os seus próprios dados"
+            };
+        }
 
         usuario.Nome = dto.Nome;
         usuario.Email = dto.Email;
+
+        if (!string.IsNullOrWhiteSpace(dto.NovaSenha))
+        {
+            usuario.RedefinirSenha(BCrypt.Net.BCrypt.HashPassword(dto.NovaSenha));
+        }
 
         await _usuarioRepository.AtualizarAsync(usuario);
 
@@ -274,6 +291,29 @@ public class UsuarioService : IUsuarioService
                 Mensagem = "Usuário não encontrado"
             };
         }
+
+        if (id != _currentUser.UsuarioId)
+        {
+            return new RespostaMetodos<RetornoUsuarioDto>
+            {
+                Sucesso = false,
+                StatusCode = HttpStatusCode.Forbidden,
+                Mensagem = "Você só pode remover a sua própria conta"
+            };
+        }
+
+        if (await _usuarioRepository.PossuiVinculoFamiliarAsync(id))
+        {
+            return new RespostaMetodos<RetornoUsuarioDto>
+            {
+                Sucesso = false,
+                StatusCode = HttpStatusCode.Conflict,
+                Mensagem = usuario.Perfil == PerfilUsuarioEnum.Pai
+                    ? "Não é possível remover esta conta: existem filhos vinculados a ela. Desvincule-os antes de remover."
+                    : "Não é possível remover esta conta: ela está vinculada a um responsável. Peça para o seu responsável desvincular a conta antes de remover."
+            };
+        }
+
         await _usuarioRepository.RemoverAsync(id);
 
         return new RespostaMetodos<RetornoUsuarioDto>
@@ -286,7 +326,8 @@ public class UsuarioService : IUsuarioService
 
     public async Task<RespostaMetodos<RetornoUsuarioDto>> CriarFilhoAsync(CriarFilhoDto dto)
     {
-        var pai = await _usuarioRepository.ObterPorIdAsync(dto.PaiId);
+        var paiId = _currentUser.UsuarioId;
+        var pai = await _usuarioRepository.ObterPorIdAsync(paiId);
 
         if (pai == null)
         {
@@ -310,7 +351,7 @@ public class UsuarioService : IUsuarioService
 
         var senhaHash = BCrypt.Net.BCrypt.HashPassword(dto.Senha);
         var filho = new Filho(dto.Nome, dto.Email, senhaHash, dto.DataNascimento);
-        var vinculo = new PaisFilhos(dto.PaiId, 0); // o id é passado na repository
+        var vinculo = new PaisFilhos(paiId, 0); // o id é passado na repository
 
         await _usuarioRepository.AdicionarFilhoAsync(filho, vinculo);
 

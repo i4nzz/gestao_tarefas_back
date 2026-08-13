@@ -34,6 +34,27 @@ public class ComprovacaoService : IComprovacaoService
 
     public async Task<RespostaMetodos<IEnumerable<RetornoComprovacaoDto>>> ObterPorTarefaAsync(int tarefaId)
     {
+        var tarefa = await _tarefaRepository.ObterPorIdAsync(tarefaId);
+
+        if (tarefa == null)
+        {
+            return new RespostaMetodos<IEnumerable<RetornoComprovacaoDto>>
+            {
+                Sucesso = false,
+                Mensagem = "Tarefa não encontrada"
+            };
+        }
+
+        if (!await _autorizacao.PodeAcessarFilhoAsync(tarefa.FilhoId))
+        {
+            return new RespostaMetodos<IEnumerable<RetornoComprovacaoDto>>
+            {
+                Sucesso = false,
+                StatusCode = HttpStatusCode.Forbidden,
+                Mensagem = "Você não tem permissão para acessar as comprovações desta tarefa"
+            };
+        }
+
         var comprovacoes = await _comprovacaoRepository.ObterPorTarefaAsync(tarefaId);
 
         if (comprovacoes == null || !comprovacoes.Any())
@@ -67,6 +88,19 @@ public class ComprovacaoService : IComprovacaoService
                 Mensagem = "Comprovação não encontrada"
             };
         }
+
+        var tarefa = await _tarefaRepository.ObterPorIdAsync(comprovacao.TarefaId);
+
+        if (tarefa == null || !await _autorizacao.PodeAcessarFilhoAsync(tarefa.FilhoId))
+        {
+            return new RespostaMetodos<RetornoComprovacaoDto?>
+            {
+                Sucesso = false,
+                StatusCode = HttpStatusCode.Forbidden,
+                Mensagem = "Você não tem permissão para acessar esta comprovação"
+            };
+        }
+
         var retorno = comprovacao.ToDto();
 
         return new RespostaMetodos<RetornoComprovacaoDto?>
@@ -141,6 +175,28 @@ public class ComprovacaoService : IComprovacaoService
             };
         }
 
+        var tarefa = await _tarefaRepository.ObterPorIdAsync(dto.TarefaId);
+
+        if (tarefa == null)
+        {
+            return new RespostaMetodos<RetornoComprovacaoDto>
+            {
+                Sucesso = false,
+                ObjetoRetorno = null,
+                Mensagem = "Tarefa não encontrada"
+            };
+        }
+
+        if (!await _autorizacao.PodeAcessarFilhoAsync(tarefa.FilhoId))
+        {
+            return new RespostaMetodos<RetornoComprovacaoDto>
+            {
+                Sucesso = false,
+                StatusCode = HttpStatusCode.Forbidden,
+                Mensagem = "Você não tem permissão para enviar comprovação para esta tarefa"
+            };
+        }
+
         string caminhoArquivo = string.Empty;
 
         try
@@ -194,6 +250,16 @@ public class ComprovacaoService : IComprovacaoService
                 Sucesso = false,
                 ObjetoRetorno = null,
                 Mensagem = "Tarefa para essa validação não foi encontrada"
+            };
+        }
+
+        if (!await _autorizacao.PodeAcessarFilhoAsync(retornoTarefa.FilhoId))
+        {
+            return new RespostaMetodos<RetornoComprovacaoDto>
+            {
+                Sucesso = false,
+                StatusCode = HttpStatusCode.Forbidden,
+                Mensagem = "Você não tem permissão para validar esta comprovação"
             };
         }
 

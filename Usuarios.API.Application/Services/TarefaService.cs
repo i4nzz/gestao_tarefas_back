@@ -40,7 +40,36 @@ public class TarefaService : ITarefaService
             };
         }
 
-        var retornoTarefas = tarefas.ToDtoList();
+        // "ObterTodas" retorna apenas as tarefas da família do usuário autenticado,
+        // não existe perfil de administrador com visão de todas as famílias.
+        var autorizadas = new List<Tarefa>();
+        var acessoPorFilho = new Dictionary<int, bool>();
+
+        foreach (var tarefa in tarefas)
+        {
+            if (!acessoPorFilho.TryGetValue(tarefa.FilhoId, out var podeAcessar))
+            {
+                podeAcessar = await _autorizacao.PodeAcessarFilhoAsync(tarefa.FilhoId);
+                acessoPorFilho[tarefa.FilhoId] = podeAcessar;
+            }
+
+            if (podeAcessar)
+            {
+                autorizadas.Add(tarefa);
+            }
+        }
+
+        if (!autorizadas.Any())
+        {
+            return new RespostaMetodos<IEnumerable<RetornoTarefaDto>>
+            {
+                Sucesso = false,
+                ObjetoRetorno = null,
+                Mensagem = "Nenhuma tarefa encontrada"
+            };
+        }
+
+        var retornoTarefas = autorizadas.ToDtoList();
 
         return new RespostaMetodos<IEnumerable<RetornoTarefaDto>>
         {

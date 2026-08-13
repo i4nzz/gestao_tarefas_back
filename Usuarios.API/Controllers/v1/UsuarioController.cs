@@ -12,6 +12,7 @@ namespace GestaoTarefas.Controllers.v1;
 /// </summary>
 [ApiController]
 [Route("api/v1/[controller]")]
+[Authorize]
 public class UsuarioController : ControllerBase
 {
     private readonly IUsuarioService _usuarioService;
@@ -90,7 +91,6 @@ public class UsuarioController : ControllerBase
     /// <returns>Resultado da operação</returns>
     [HttpPut]
     [Route("AtualizarUsuario/{id}")]
-    [AllowAnonymous]
     public async Task<IActionResult> Atualizar(int id, [FromBody] AtualizarUsuarioDto dto)
     {
         if (!ModelState.IsValid)
@@ -102,25 +102,40 @@ public class UsuarioController : ControllerBase
 
         if (!usuario.Sucesso)
         {
+            if (usuario.StatusCode == HttpStatusCode.Forbidden)
+            {
+                return StatusCode((int)HttpStatusCode.Forbidden, usuario);
+            }
+
             return StatusCode((int)HttpStatusCode.BadRequest, usuario);
         }
 
         return StatusCode((int)HttpStatusCode.OK, usuario.ObjetoRetorno);
     }
     /// <summary>
-    /// Remover um usuario do sistema. Se o usuário for um pai, todos os filhos associados a ele também serão removidos.
+    /// Remover a própria conta do sistema. Se houver vínculo familiar (Pai com filhos, ou Filho vinculado a um
+    /// responsável), a remoção é bloqueada com 409 Conflict até que o vínculo seja desfeito.
     /// </summary>
-    /// <param name="id">ID do usuário</param>
+    /// <param name="id">ID do usuário (deve ser o mesmo do usuário autenticado)</param>
     /// <returns>Resultado da operação</returns>
     [HttpDelete]
     [Route("RemoverUsuario/{id}")]
-    [AllowAnonymous]
     public async Task<IActionResult> Remover(int id)
     {
         var usuario = await _usuarioService.RemoverAsync(id);
 
         if (!usuario.Sucesso)
         {
+            if (usuario.StatusCode == HttpStatusCode.Forbidden)
+            {
+                return StatusCode((int)HttpStatusCode.Forbidden, usuario);
+            }
+
+            if (usuario.StatusCode == HttpStatusCode.Conflict)
+            {
+                return StatusCode((int)HttpStatusCode.Conflict, usuario);
+            }
+
             return StatusCode((int)HttpStatusCode.BadRequest, usuario);
         }
 
@@ -155,6 +170,7 @@ public class UsuarioController : ControllerBase
     /// Solicita redefinição de senha. Sempre retorna a mesma resposta, exista ou não o e-mail informado.
     /// </summary>
     [HttpPost("EsqueciSenha")]
+    [AllowAnonymous]
     public async Task<IActionResult> EsqueciSenha([FromBody] EsqueciSenhaDto dto)
     {
         if (!ModelState.IsValid)
@@ -171,6 +187,7 @@ public class UsuarioController : ControllerBase
     /// Redefine a senha a partir de um token válido recebido por e-mail.
     /// </summary>
     [HttpPost("RedefinirSenha")]
+    [AllowAnonymous]
     public async Task<IActionResult> RedefinirSenha([FromBody] RedefinirSenhaDto dto)
     {
         if (!ModelState.IsValid)
