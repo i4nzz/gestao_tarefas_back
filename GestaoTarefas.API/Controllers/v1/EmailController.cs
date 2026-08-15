@@ -10,7 +10,7 @@ namespace GestaoTarefas.API.Controllers.v1;
 /// </summary>
 [ApiController]
 [Route("api/[controller]")]
-[Authorize(Roles = "Pai")]
+//[Authorize(Roles = "Pai")]
 public class EmailController : ControllerBase
 {
     private readonly IEmailService _emailService;

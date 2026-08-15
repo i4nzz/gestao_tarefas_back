@@ -3,7 +3,7 @@
 public class EmailResult
 {
     public bool Sucesso { get; init; }
-    // ID retornado pelo Resend para rastreamento.
+    // ID retornado pelo Brevo para rastreamento.
     public string? EmailId { get; init; }
     public string? MensagemErro { get; init; }
     public static EmailResult Ok(string emailId)

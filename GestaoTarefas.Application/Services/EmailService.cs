@@ -1,29 +1,31 @@
 ﻿using System.Net;
 using System.Text.RegularExpressions;
+using brevo_csharp.Api;
+using brevo_csharp.Client;
+using brevo_csharp.Model;
 using GestaoTarefas.Application.DTOs.Email;
 using GestaoTarefas.Application.Common.Responses;
 using GestaoTarefas.Application.Configuration;
 using GestaoTarefas.Application.Interfaces;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using Resend;
 
 namespace GestaoTarefas.Application.Services;
 
 public class EmailService : IEmailService
 {
 
-    private readonly IResend _resend;
-    private readonly ResendOptions _resendOptions;
+    private readonly ITransactionalEmailsApi _transactionalEmailsApi;
+    private readonly BrevoOptions _brevoOptions;
     private readonly ILogger<EmailService> _logger;
 
     public EmailService(
-        IResend resend,
-        IOptions<ResendOptions> options,
+        ITransactionalEmailsApi transactionalEmailsApi,
+        IOptions<BrevoOptions> options,
         ILogger<EmailService> logger)
     {
-        _resend = resend;
-        _resendOptions = options.Value;
+        _transactionalEmailsApi = transactionalEmailsApi;
+        _brevoOptions = options.Value;
         _logger = logger;
     }
     public async Task<RespostaMetodos<EmailResult>> EnviarAsync(SendEmailRequest request, CancellationToken cancellationToken = default)
@@ -32,50 +34,53 @@ public class EmailService : IEmailService
         {
             ValidarRequisicao(request);
 
-            var message = new EmailMessage
+            var message = new SendSmtpEmail
             {
-                From = request.Remetente ?? _resendOptions.FormattedFrom,
-                To = EmailAddressList.From(request.ListaDestinatarios),
+                Sender = string.IsNullOrWhiteSpace(request.Remetente)
+                    ? new SendSmtpEmailSender(_brevoOptions.DefaultFromName, _brevoOptions.DefaultFromEmail)
+                    : new SendSmtpEmailSender(_brevoOptions.DefaultFromName, request.Remetente),
+                To = request.ListaDestinatarios.Select(email => new SendSmtpEmailTo(email)).ToList(),
                 Subject = request.Assunto,
             };
 
-            if (!string.IsNullOrWhiteSpace(request.HtmlBody))
-            {
-                message.HtmlBody = request.HtmlBody;
-            }
-
-            else if (!string.IsNullOrWhiteSpace(request.CorpoTexto))
-            {
-                message.TextBody = request.CorpoTexto;
-            }
-
-            else
+            if (string.IsNullOrWhiteSpace(request.HtmlBody) && string.IsNullOrWhiteSpace(request.CorpoTexto))
             {
                 throw new ArgumentException("É obrigatório fornecer HtmlBody ou TextBody.");
             }
 
+            if (!string.IsNullOrWhiteSpace(request.HtmlBody))
+            {
+                message.HtmlContent = request.HtmlBody;
+            }
+
+            // Envia sempre uma versão em texto puro junto da versão HTML (multipart/alternative):
+            // filtros de spam penalizam e-mails só-HTML, então isso ajuda a entregabilidade.
+            message.TextContent = !string.IsNullOrWhiteSpace(request.CorpoTexto)
+                ? request.CorpoTexto
+                : Regex.Replace(request.HtmlBody ?? string.Empty, "<[^>]+>", " ").Trim();
+
             if (request.DestinatariosEmCopia is { Count: > 0 })
             {
-                message.Cc = EmailAddressList.From(request.DestinatariosEmCopia);
+                message.Cc = request.DestinatariosEmCopia.Select(email => new SendSmtpEmailCc(email)).ToList();
             }
 
             if (request.DestinatariosEmCopiaOculta is { Count: > 0 })
             {
-                message.Bcc = EmailAddressList.From(request.DestinatariosEmCopiaOculta);
+                message.Bcc = request.DestinatariosEmCopiaOculta.Select(email => new SendSmtpEmailBcc(email)).ToList();
             }
 
             if (request.Tags is { Count: > 0 })
             {
-                message.Tags = request.Tags.Select(t => new EmailTag { Name = t.Key, Value = t.Value }).ToList();
+                message.Tags = request.Tags.Select(t => $"{t.Key}:{t.Value}").ToList();
             }
 
             _logger.LogInformation("Enviando e-mail | Para: {To} | Assunto: {Subject}", string.Join(", ", request.ListaDestinatarios), request.Assunto);
 
-            var response = await _resend.EmailSendAsync(message, cancellationToken);
+            var response = await _transactionalEmailsApi.SendTransacEmailAsync(message);
 
-            _logger.LogInformation("E-mail enviado com sucesso | ID: {EmailId}", response.Content);
+            _logger.LogInformation("E-mail enviado com sucesso | ID: {EmailId}", response.MessageId);
 
-            var respostaEmail = EmailResult.Ok(response.Content.ToString());
+            var respostaEmail = EmailResult.Ok(response.MessageId);
 
             return new RespostaMetodos<EmailResult>
             {
@@ -85,9 +90,9 @@ public class EmailService : IEmailService
                 Mensagem = "E-mail enviado com sucesso."
             };
         }
-        catch (ResendException ex)
+        catch (ApiException ex)
         {
-            _logger.LogError(ex, "Erro do Resend ao enviar e-mail para {To}: {Error}", string.Join(", ", request.ListaDestinatarios), ex.Message);
+            _logger.LogError(ex, "Erro do Brevo ao enviar e-mail para {To}: {Error}", string.Join(", ", request.ListaDestinatarios), ex.Message);
 
             return new RespostaMetodos<EmailResult>
             {

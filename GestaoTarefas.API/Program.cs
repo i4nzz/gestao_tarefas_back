@@ -14,7 +14,7 @@ builder.Services
     .AddJwtAuthentication(builder.Configuration)
     .AddSwaggerConfiguration()
     .AddInfrastructure(builder.Configuration)
-    .AddResendEmail(builder.Configuration)
+    .AddBrevoEmail(builder.Configuration)
     .AddControllers();
 
 builder.Services.AddHttpContextAccessor();
