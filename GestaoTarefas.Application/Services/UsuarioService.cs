@@ -83,8 +83,8 @@ public class UsuarioService : IUsuarioService
 
             await _usuarioRepository.AtualizarAsync(usuario);
 
-            var baseUrl = _configuration["UrlsFrontend:BaseUrl"];
-            var path = _configuration["UrlsFrontend:RedefinicaoSenhaPath"];
+            var baseUrl = _configuration["LinksEmail:BaseUrl"];
+            var path = _configuration["LinksEmail:RedefinicaoSenhaPath"];
             var link = $"{baseUrl}{path}?token={token}";
 
             var resultadoEnvioEmail = await _emailService.EnviarEmailResetSenhaAsync(usuario.Email, usuario.Nome, link);
@@ -173,6 +173,18 @@ public class UsuarioService : IUsuarioService
 
     public async Task<RespostaMetodos<RetornoUsuarioDto>> CriarUsuarioAsync(CriarUsuarioDto dto)
     {
+        var usuarioExistente = await _usuarioRepository.ObterPorEmailAsync(dto.Email);
+
+        if (usuarioExistente != null)
+        {
+            return new RespostaMetodos<RetornoUsuarioDto>
+            {
+                Sucesso = false,
+                ObjetoRetorno = null,
+                Mensagem = "Já existe uma conta cadastrada com este e-mail"
+            };
+        }
+
         var senhaHash = BCrypt.Net.BCrypt.HashPassword(dto.Senha);
         var pai = new Pai(dto.Nome, dto.Email, senhaHash);
 
@@ -181,8 +193,8 @@ public class UsuarioService : IUsuarioService
 
         await _usuarioRepository.AdicionarAsync(pai);
 
-        var baseUrl = _configuration["UrlsFrontend:BaseUrl"];
-        var path = _configuration["UrlsFrontend:ConfirmacaoEmailPath"];
+        var baseUrl = _configuration["LinksEmail:BaseUrl"];
+        var path = _configuration["LinksEmail:ConfirmacaoEmailPath"];
         var link = $"{baseUrl}{path}?token={token}";
 
         var resultadoEmail = await _emailService.EnviarEmailConfirmacaoAsync(pai.Email, pai.Nome, link);
@@ -346,6 +358,18 @@ public class UsuarioService : IUsuarioService
                 Sucesso = false,
                 ObjetoRetorno = null,
                 Mensagem = "O usuário informado não é um Pai"
+            };
+        }
+
+        var usuarioExistente = await _usuarioRepository.ObterPorEmailAsync(dto.Email);
+
+        if (usuarioExistente != null)
+        {
+            return new RespostaMetodos<RetornoUsuarioDto>
+            {
+                Sucesso = false,
+                ObjetoRetorno = null,
+                Mensagem = "Já existe uma conta cadastrada com este e-mail"
             };
         }
 

@@ -1,6 +1,7 @@
 ﻿using System.Net;
 using GestaoTarefas.Application.DTOs.Login;
 using GestaoTarefas.Application.Interfaces;
+using GestaoTarefas.Helpers;
 using Microsoft.AspNetCore.Mvc;
 
 namespace GestaoTarefas.Controllers.v1;
@@ -61,6 +62,27 @@ public class AuthController : ControllerBase
         }
 
         return StatusCode((int)HttpStatusCode.OK, resultado);
+    }
+
+    /// <summary>
+    /// Confirma o e-mail do usuário a partir do link clicado diretamente no e-mail recebido.
+    /// Retorna uma página HTML de sucesso/erro, já que quem abre esse link é o navegador, não o app.
+    /// </summary>
+    [HttpGet("ConfirmarEmail")]
+    public async Task<ContentResult> ConfirmarEmailPorLink([FromQuery] string token)
+    {
+        if (string.IsNullOrWhiteSpace(token))
+        {
+            return Content(HtmlPageBuilder.BuildMessagePage(false, "Link inválido", "O link de confirmação está incompleto."), "text/html");
+        }
+
+        var resultado = await _usuarioService.ConfirmarEmailAsync(new ConfirmarEmailDto { Token = token });
+
+        var html = resultado.Sucesso
+            ? HtmlPageBuilder.BuildMessagePage(true, "E-mail confirmado!", "Sua conta já está ativa. Você já pode voltar ao app e entrar.")
+            : HtmlPageBuilder.BuildMessagePage(false, "Não foi possível confirmar", resultado.Mensagem ?? "O link usado não é válido ou já expirou.");
+
+        return Content(html, "text/html");
     }
 
 

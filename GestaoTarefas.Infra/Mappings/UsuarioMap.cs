@@ -19,6 +19,9 @@ public class UsuarioMap : IEntityTypeConfiguration<Usuario>
             .IsRequired()
             .HasMaxLength(150);
 
+        builder.HasIndex(x => x.Email)
+            .IsUnique();
+
         builder.Property(x => x.SenhaHash)
             .IsRequired()
             .HasMaxLength(255);

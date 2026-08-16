@@ -2,6 +2,7 @@
 using GestaoTarefas.Application.DTOs.Login;
 using GestaoTarefas.Application.DTOs.Usuario;
 using GestaoTarefas.Application.Interfaces;
+using GestaoTarefas.Helpers;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -203,5 +204,42 @@ public class UsuarioController : ControllerBase
         }
 
         return StatusCode((int)HttpStatusCode.OK, resultado);
+    }
+
+    /// <summary>
+    /// Exibe a página HTML com o formulário de nova senha, aberta a partir do link recebido por e-mail.
+    /// </summary>
+    [HttpGet("RedefinirSenha")]
+    [AllowAnonymous]
+    public ContentResult RedefinirSenhaPagina([FromQuery] string token)
+    {
+        return Content(HtmlPageBuilder.BuildRedefinirSenhaForm(token), "text/html");
+    }
+
+    /// <summary>
+    /// Processa o envio do formulário HTML de redefinição de senha e retorna uma página de sucesso/erro.
+    /// </summary>
+    [HttpPost("RedefinirSenha/Confirmar")]
+    [AllowAnonymous]
+    public async Task<ContentResult> RedefinirSenhaPorFormulario([FromForm] RedefinirSenhaFormDto dto)
+    {
+        if (!ModelState.IsValid)
+        {
+            return Content(HtmlPageBuilder.BuildRedefinirSenhaForm(dto.Token, "Dados inválidos. Verifique a nova senha e tente novamente."), "text/html");
+        }
+
+        if (dto.NovaSenha != dto.ConfirmarSenha)
+        {
+            return Content(HtmlPageBuilder.BuildRedefinirSenhaForm(dto.Token, "As senhas informadas não coincidem."), "text/html");
+        }
+
+        var resultado = await _usuarioService.RedefinirSenhaAsync(new RedefinirSenhaDto { Token = dto.Token, NovaSenha = dto.NovaSenha });
+
+        if (!resultado.Sucesso)
+        {
+            return Content(HtmlPageBuilder.BuildRedefinirSenhaForm(dto.Token, resultado.Mensagem ?? "O link usado não é válido ou já expirou."), "text/html");
+        }
+
+        return Content(HtmlPageBuilder.BuildMessagePage(true, "Senha redefinida!", "Sua senha foi alterada com sucesso. Você já pode voltar ao app e entrar com a nova senha."), "text/html");
     }
 }
