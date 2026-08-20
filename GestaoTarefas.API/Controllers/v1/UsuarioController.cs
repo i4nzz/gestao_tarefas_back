@@ -43,6 +43,24 @@ public class UsuarioController : ControllerBase
         return StatusCode((int)HttpStatusCode.OK, usuarios.ObjetoRetorno);
     }
     /// <summary>
+    /// Obter os filhos vinculados ao Pai autenticado.
+    /// </summary>
+    /// <returns>Lista de filhos vinculados ao Pai logado</returns>
+    [HttpGet]
+    [Route("MeusFilhos")]
+    [Authorize(Roles = "Pai")]
+    public async Task<IActionResult> MeusFilhos()
+    {
+        var filhos = await _usuarioService.ObterMeusFilhosAsync();
+
+        if (!filhos.Sucesso)
+        {
+            return StatusCode((int)HttpStatusCode.NotFound, filhos);
+        }
+
+        return StatusCode((int)HttpStatusCode.OK, filhos.ObjetoRetorno);
+    }
+    /// <summary>
     /// Obter um usuário específico pelo seu ID.
     /// </summary>
     /// <param name="id">ID do usuário</param>

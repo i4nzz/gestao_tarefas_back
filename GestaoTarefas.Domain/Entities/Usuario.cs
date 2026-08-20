@@ -54,6 +54,13 @@ public class Usuario
         return true;
     }
 
+    public void ConfirmarEmailAutomaticamente()
+    {
+        EmailConfirmado = true;
+        TokenConfirmacaoEmail = null;
+        TokenConfirmacaoExpiracao = null;
+    }
+
     public string GerarTokenResetSenha(TimeSpan validade)
     {
         var token = Guid.NewGuid().ToString("N");

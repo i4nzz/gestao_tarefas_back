@@ -60,6 +60,20 @@ public class UsuarioService : IUsuarioService
         };
     }
 
+    public async Task<RespostaMetodos<IEnumerable<RetornoUsuarioDto>>> ObterMeusFilhosAsync()
+    {
+        var filhos = await _usuarioRepository.ObterFilhosPorPaiIdAsync(_currentUser.UsuarioId);
+
+        var retornoFilhos = filhos.ToDtoList();
+
+        return new RespostaMetodos<IEnumerable<RetornoUsuarioDto>>
+        {
+            Sucesso = true,
+            ObjetoRetorno = retornoFilhos,
+            Mensagem = "Filhos obtidos com sucesso"
+        };
+    }
+
     public async Task<RespostaMetodos<object?>> EsqueciSenhaAsync(EsqueciSenhaDto dto)
     {
         var usuario = await _usuarioRepository.ObterPorEmailAsync(dto.Email);
@@ -375,6 +389,7 @@ public class UsuarioService : IUsuarioService
 
         var senhaHash = BCrypt.Net.BCrypt.HashPassword(dto.Senha);
         var filho = new Filho(dto.Nome, dto.Email, senhaHash, dto.DataNascimento);
+        filho.ConfirmarEmailAutomaticamente(); // quem cadastra é o próprio Pai autenticado, não há fluxo de confirmação por e-mail para o Filho
         var vinculo = new PaisFilhos(paiId, 0); // o id é passado na repository
 
         await _usuarioRepository.AdicionarFilhoAsync(filho, vinculo);

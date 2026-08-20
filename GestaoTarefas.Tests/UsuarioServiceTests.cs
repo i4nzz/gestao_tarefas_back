@@ -64,6 +64,58 @@ public class UsuarioServiceTests
     }
 
     [Fact]
+    public async Task CriarFilhoAsync_MarcaEmailComoConfirmado_ParaPermitirLoginImediato()
+    {
+        var pai = new Pai("Pai A", "pai@teste.com", "hash");
+        var usuarioRepository = new Mock<IUsuarioRepository>();
+        usuarioRepository.Setup(r => r.ObterPorIdAsync(1)).ReturnsAsync(pai);
+
+        Filho? filhoCapturado = null;
+        usuarioRepository
+            .Setup(r => r.AdicionarFilhoAsync(It.IsAny<Filho>(), It.IsAny<PaisFilhos>()))
+            .Callback<Filho, PaisFilhos>((filho, _) => filhoCapturado = filho)
+            .Returns(Task.CompletedTask);
+
+        var currentUser = new Mock<ICurrentUserService>();
+        currentUser.Setup(c => c.UsuarioId).Returns(1);
+
+        var servico = CriarServico(usuarioRepository, currentUser);
+
+        var dto = new CriarFilhoDto
+        {
+            Nome = "Filho A",
+            Email = "filho@teste.com",
+            Senha = "123456",
+            DataNascimento = new DateTime(2015, 1, 1)
+        };
+
+        var resultado = await servico.CriarFilhoAsync(dto);
+
+        Assert.True(resultado.Sucesso);
+        Assert.NotNull(filhoCapturado);
+        Assert.True(filhoCapturado!.EmailConfirmado);
+    }
+
+    [Fact]
+    public async Task ObterMeusFilhosAsync_RetornaApenasFilhosDoPaiAutenticado()
+    {
+        var filho = new Filho("Filho A", "filho@teste.com", "hash", new DateTime(2015, 1, 1));
+        var usuarioRepository = new Mock<IUsuarioRepository>();
+        usuarioRepository.Setup(r => r.ObterFilhosPorPaiIdAsync(1)).ReturnsAsync(new List<Usuario> { filho });
+
+        var currentUser = new Mock<ICurrentUserService>();
+        currentUser.Setup(c => c.UsuarioId).Returns(1);
+
+        var servico = CriarServico(usuarioRepository, currentUser);
+
+        var resultado = await servico.ObterMeusFilhosAsync();
+
+        Assert.True(resultado.Sucesso);
+        Assert.Single(resultado.ObjetoRetorno!);
+        usuarioRepository.Verify(r => r.ObterFilhosPorPaiIdAsync(1), Times.Once);
+    }
+
+    [Fact]
     public async Task AtualizarAsync_QuandoIdNaoEDoUsuarioAutenticado_RetornaForbiddenENaoSalva()
     {
         var usuario = new Usuario("Filho A", "a@teste.com", "hash", PerfilUsuarioEnum.Filho);

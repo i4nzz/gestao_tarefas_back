@@ -6,6 +6,7 @@ namespace GestaoTarefas.Application.Interfaces;
 public interface IUsuarioService
 {
     Task<RespostaMetodos<IEnumerable<RetornoUsuarioDto>>> ObterTodosAsync();
+    Task<RespostaMetodos<IEnumerable<RetornoUsuarioDto>>> ObterMeusFilhosAsync();
     Task<RespostaMetodos<RetornoUsuarioDto?>> ObterPorIdAsync(int id);
     Task<RespostaMetodos<RetornoUsuarioDto>> CriarUsuarioAsync(CriarUsuarioDto dto);
     Task<RespostaMetodos<RetornoUsuarioDto>> AtualizarAsync(int id, AtualizarUsuarioDto dto);
