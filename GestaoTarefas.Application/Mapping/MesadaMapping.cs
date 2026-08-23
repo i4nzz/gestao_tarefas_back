@@ -16,7 +16,8 @@ public static class MesadaMapping
             Mes = mesada.Mes,
             Ano = mesada.Ano,
             ValorGasto = valorGasto,
-            SaldoDisponivel = mesada.Valor - valorGasto
+            SaldoDisponivel = mesada.Valor - valorGasto,
+            Ativa = mesada.Ativa
         };
     }
 }

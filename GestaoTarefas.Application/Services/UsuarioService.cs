@@ -161,6 +161,11 @@ public class UsuarioService : IUsuarioService
         };
     }
 
+    public async Task<RespostaMetodos<RetornoUsuarioDto?>> ObterMeuPerfilAsync()
+    {
+        return await ObterPorIdAsync(_currentUser.UsuarioId);
+    }
+
     public async Task<RespostaMetodos<RetornoUsuarioDto?>> ObterPorIdAsync(int id)
     {
         var usuario = await _usuarioRepository.ObterPorIdAsync(id);

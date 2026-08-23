@@ -18,7 +18,7 @@ public class MesadaRepository : IMesadaRepository
     {
         return await _contexto.Mesadas
             .Include(m => m.Filho)
-            .Where(m => m.FilhoId == filhoId)
+            .Where(m => m.FilhoId == filhoId && m.Ativa)
             .OrderByDescending(m => m.Ano)
             .ThenByDescending(m => m.Mes)
             .ToListAsync();
@@ -35,5 +35,21 @@ public class MesadaRepository : IMesadaRepository
     {
         await _contexto.Mesadas.AddAsync(mesada);
         await _contexto.SaveChangesAsync();
+    }
+
+    public async Task AtualizarAsync(Mesada mesada)
+    {
+        _contexto.Mesadas.Update(mesada);
+        await _contexto.SaveChangesAsync();
+    }
+
+    public async Task RemoverAsync(int id)
+    {
+        var mesada = await ObterPorIdAsync(id);
+        if (mesada != null)
+        {
+            _contexto.Mesadas.Remove(mesada);
+            await _contexto.SaveChangesAsync();
+        }
     }
 }

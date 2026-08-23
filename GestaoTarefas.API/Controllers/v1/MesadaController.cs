@@ -66,4 +66,55 @@ public class MesadaController : ControllerBase
 
         return StatusCode((int)HttpStatusCode.Created, mesada);
     }
+
+    /// <summary>
+    /// Atualiza o valor de uma mesada existente. Não pode ser reduzido abaixo do total já gasto nela.
+    /// </summary>
+    [HttpPut]
+    [Route("Atualizar/{id}")]
+    [Authorize(Roles = "Pai")]
+    public async Task<IActionResult> Atualizar(int id, [FromBody] AtualizarMesadaDto dto)
+    {
+        var mesada = await _mesadaService.AtualizarAsync(id, dto);
+
+        if (!mesada.Sucesso)
+        {
+            if (mesada.StatusCode == HttpStatusCode.Forbidden)
+            {
+                return StatusCode((int)HttpStatusCode.Forbidden, mesada);
+            }
+
+            return StatusCode((int)HttpStatusCode.BadRequest, mesada);
+        }
+
+        return StatusCode((int)HttpStatusCode.OK, mesada);
+    }
+
+    /// <summary>
+    /// Desativa uma mesada (1ª chamada) ou remove definitivamente (2ª chamada, já desativada, sem gastos registrados).
+    /// </summary>
+    [HttpDelete]
+    [Route("Remover/{id}")]
+    [Authorize(Roles = "Pai")]
+    public async Task<IActionResult> Remover(int id)
+    {
+        var mesada = await _mesadaService.RemoverAsync(id);
+
+        if (!mesada.Sucesso)
+        {
+            if (mesada.StatusCode == HttpStatusCode.Forbidden)
+            {
+                return StatusCode((int)HttpStatusCode.Forbidden, mesada);
+            }
+
+            if (mesada.StatusCode == HttpStatusCode.Conflict)
+            {
+                return StatusCode((int)HttpStatusCode.Conflict, mesada);
+            }
+
+            return StatusCode((int)HttpStatusCode.BadRequest, mesada);
+        }
+
+        return StatusCode((int)HttpStatusCode.OK, mesada);
+    }
 }

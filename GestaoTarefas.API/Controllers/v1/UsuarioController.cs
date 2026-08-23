@@ -61,6 +61,23 @@ public class UsuarioController : ControllerBase
         return StatusCode((int)HttpStatusCode.OK, filhos.ObjetoRetorno);
     }
     /// <summary>
+    /// Obter as informações básicas do usuário autenticado (seção de perfil).
+    /// </summary>
+    /// <returns>Dados do usuário logado</returns>
+    [HttpGet]
+    [Route("MeuPerfil")]
+    public async Task<IActionResult> MeuPerfil()
+    {
+        var usuario = await _usuarioService.ObterMeuPerfilAsync();
+
+        if (!usuario.Sucesso)
+        {
+            return StatusCode((int)HttpStatusCode.NotFound, usuario);
+        }
+
+        return StatusCode((int)HttpStatusCode.OK, usuario.ObjetoRetorno);
+    }
+    /// <summary>
     /// Obter um usuário específico pelo seu ID.
     /// </summary>
     /// <param name="id">ID do usuário</param>

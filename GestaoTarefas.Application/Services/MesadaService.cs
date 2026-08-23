@@ -118,4 +118,118 @@ public class MesadaService : IMesadaService
             Mensagem = "Mesada registrada com sucesso"
         };
     }
+
+    public async Task<RespostaMetodos<RetornoMesadaDto>> AtualizarAsync(int id, AtualizarMesadaDto dto)
+    {
+        var mesada = await _mesadaRepository.ObterPorIdAsync(id);
+
+        if (mesada == null)
+        {
+            return new RespostaMetodos<RetornoMesadaDto>
+            {
+                Sucesso = false,
+                Mensagem = "Mesada não encontrada"
+            };
+        }
+
+        if (!await _autorizacao.PodeAcessarFilhoAsync(mesada.FilhoId))
+        {
+            return new RespostaMetodos<RetornoMesadaDto>
+            {
+                Sucesso = false,
+                StatusCode = HttpStatusCode.Forbidden,
+                Mensagem = "Você não tem permissão para editar esta mesada"
+            };
+        }
+
+        if (dto.Valor <= 0)
+        {
+            return new RespostaMetodos<RetornoMesadaDto>
+            {
+                Sucesso = false,
+                Mensagem = "O valor da mesada deve ser maior que zero"
+            };
+        }
+
+        var totalJaGasto = await _registroRepository.ObterTotalGastoPorMesadaAsync(id);
+
+        if (dto.Valor < totalJaGasto)
+        {
+            return new RespostaMetodos<RetornoMesadaDto>
+            {
+                Sucesso = false,
+                Mensagem = $"O novo valor não pode ser menor que o total já gasto nesta mesada: {totalJaGasto:C}"
+            };
+        }
+
+        mesada.Valor = dto.Valor;
+
+        await _mesadaRepository.AtualizarAsync(mesada);
+
+        return new RespostaMetodos<RetornoMesadaDto>
+        {
+            Sucesso = true,
+            ObjetoRetorno = mesada.ToDto(totalJaGasto),
+            StatusCode = HttpStatusCode.OK,
+            Mensagem = "Mesada atualizada com sucesso"
+        };
+    }
+
+    public async Task<RespostaMetodos<RetornoMesadaDto>> RemoverAsync(int id)
+    {
+        var mesada = await _mesadaRepository.ObterPorIdAsync(id);
+
+        if (mesada == null)
+        {
+            return new RespostaMetodos<RetornoMesadaDto>
+            {
+                Sucesso = false,
+                Mensagem = "Mesada não encontrada"
+            };
+        }
+
+        if (!await _autorizacao.PodeAcessarFilhoAsync(mesada.FilhoId))
+        {
+            return new RespostaMetodos<RetornoMesadaDto>
+            {
+                Sucesso = false,
+                StatusCode = HttpStatusCode.Forbidden,
+                Mensagem = "Você não tem permissão para remover esta mesada"
+            };
+        }
+
+        if (mesada.Ativa)
+        {
+            mesada.Ativa = false;
+            await _mesadaRepository.AtualizarAsync(mesada);
+
+            return new RespostaMetodos<RetornoMesadaDto>
+            {
+                Sucesso = true,
+                StatusCode = HttpStatusCode.OK,
+                Mensagem = "Mesada desativada com sucesso"
+            };
+        }
+
+        var totalJaGasto = await _registroRepository.ObterTotalGastoPorMesadaAsync(id);
+
+        if (totalJaGasto > 0)
+        {
+            return new RespostaMetodos<RetornoMesadaDto>
+            {
+                Sucesso = false,
+                StatusCode = HttpStatusCode.Conflict,
+                Mensagem = "Não é possível remover esta mesada: já existem gastos registrados nela."
+            };
+        }
+
+        await _mesadaRepository.RemoverAsync(id);
+
+        return new RespostaMetodos<RetornoMesadaDto>
+        {
+            Sucesso = true,
+            StatusCode = HttpStatusCode.OK,
+            Mensagem = "Mesada removida com sucesso"
+        };
+    }
 }

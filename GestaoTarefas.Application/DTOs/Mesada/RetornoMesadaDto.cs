@@ -10,4 +10,5 @@ public class RetornoMesadaDto
     public int Ano { get; set; }
     public decimal ValorGasto { get; set; }
     public decimal SaldoDisponivel { get; set; }
+    public bool Ativa { get; set; }
 }

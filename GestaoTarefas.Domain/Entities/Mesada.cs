@@ -8,6 +8,7 @@ public class Mesada
     public decimal Valor { get; set; }
     public int Mes { get; set; }
     public int Ano { get; set; }
+    public bool Ativa { get; set; } = true;
 
     // Relacionamentos
     public Usuario Filho { get; set; } = null!;
