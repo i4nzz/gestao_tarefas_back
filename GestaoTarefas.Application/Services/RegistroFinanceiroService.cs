@@ -45,16 +45,6 @@ public class RegistroFinanceiroService : IRegistroFinanceiroService
 
         var registros = await _registroRepository.ObterPorFilhoAsync(filhoId);
 
-        if (registros == null || !registros.Any())
-        {
-            return new RespostaMetodos<IEnumerable<RetornoRegistroFinanceiroDto>>
-            {
-                Sucesso = false,
-                ObjetoRetorno = null,
-                Mensagem = "Nenhum registro financeiro encontrado para este filho"
-            };
-        }
-
         return new RespostaMetodos<IEnumerable<RetornoRegistroFinanceiroDto>>
         {
             Sucesso = true,
@@ -127,6 +117,18 @@ public class RegistroFinanceiroService : IRegistroFinanceiroService
             };
         }
 
+        var totalJaGasto = await _registroRepository.ObterTotalGastoPorMesadaAsync(dto.MesadaId);
+        var saldoDisponivel = mesada.Valor - totalJaGasto;
+
+        if (dto.Valor > saldoDisponivel)
+        {
+            return new RespostaMetodos<RetornoRegistroFinanceiroDto>
+            {
+                Sucesso = false,
+                Mensagem = $"Saldo insuficiente na mesada. Saldo disponível: {saldoDisponivel:C}"
+            };
+        }
+
         var registro = new RegistroFinanceiro
         {
             FilhoId = dto.FilhoId,
@@ -145,6 +147,66 @@ public class RegistroFinanceiroService : IRegistroFinanceiroService
             ObjetoRetorno = registro.ToDto(),
             StatusCode = HttpStatusCode.Created,
             Mensagem = "Registro financeiro criado com sucesso"
+        };
+    }
+
+    public async Task<RespostaMetodos<ResumoFinanceiroFilhoDto>> ObterResumoPorFilhoAsync(int filhoId)
+    {
+        if (!await _autorizacao.PodeAcessarFilhoAsync(filhoId))
+        {
+            return new RespostaMetodos<ResumoFinanceiroFilhoDto>
+            {
+                Sucesso = false,
+                StatusCode = HttpStatusCode.Forbidden,
+                Mensagem = "Você não tem permissão para acessar o resumo financeiro deste filho"
+            };
+        }
+
+        var usuario = await _usuarioRepository.ObterPorIdAsync(filhoId);
+
+        if (usuario == null)
+        {
+            return new RespostaMetodos<ResumoFinanceiroFilhoDto>
+            {
+                Sucesso = false,
+                Mensagem = "Filho não encontrado"
+            };
+        }
+
+        var mesadas = await _mesadaRepository.ObterPorFilhoAsync(filhoId);
+        var registros = await _registroRepository.ObterPorFilhoAsync(filhoId);
+
+        var totalMesadas = mesadas.Sum(m => m.Valor);
+        var totalGasto = registros.Sum(r => r.Valor);
+
+        var gastosPorCategoria = registros
+            .GroupBy(r => new { r.CategoriaId, NomeCategoria = r.Categoria?.Nome ?? string.Empty })
+            .Select(g => new GastoPorCategoriaDto
+            {
+                CategoriaId = g.Key.CategoriaId,
+                NomeCategoria = g.Key.NomeCategoria,
+                Total = g.Sum(r => r.Valor),
+                Percentual = totalGasto == 0 ? 0 : (double)(g.Sum(r => r.Valor) / totalGasto) * 100
+            })
+            .OrderByDescending(g => g.Total)
+            .ToList();
+
+        var resumo = new ResumoFinanceiroFilhoDto
+        {
+            FilhoId = filhoId,
+            NomeFilho = usuario.Nome,
+            TotalMesadas = totalMesadas,
+            TotalGasto = totalGasto,
+            SaldoDisponivel = totalMesadas - totalGasto,
+            GastosPorCategoria = gastosPorCategoria
+        };
+
+        return new RespostaMetodos<ResumoFinanceiroFilhoDto>
+        {
+            Sucesso = true,
+            ObjetoRetorno = resumo,
+            StatusCode = HttpStatusCode.OK,
+            Mensagem = "Resumo financeiro obtido com sucesso"
         };
     }
 }

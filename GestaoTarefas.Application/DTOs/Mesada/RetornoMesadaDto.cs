@@ -8,4 +8,6 @@ public class RetornoMesadaDto
     public decimal Valor { get; set; }
     public int Mes { get; set; }
     public int Ano { get; set; }
+    public decimal ValorGasto { get; set; }
+    public decimal SaldoDisponivel { get; set; }
 }

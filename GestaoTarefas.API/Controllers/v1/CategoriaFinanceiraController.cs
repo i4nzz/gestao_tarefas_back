@@ -16,6 +16,10 @@ public class CategoriaFinanceiraController : ControllerBase
 {
     private readonly ICategoriaFinanceiraService _categoriaFinanceiraService;
 
+    /// <summary>
+    /// Construtor da classe CategoriaFinanceiraController.
+    /// </summary>
+    /// <param name="categoriaFinanceiraService"></param>
     public CategoriaFinanceiraController(ICategoriaFinanceiraService categoriaFinanceiraService)
     {
         _categoriaFinanceiraService = categoriaFinanceiraService;

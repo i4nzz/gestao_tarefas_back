@@ -79,6 +79,34 @@ public class RegistroFinanceiroServiceTests
     }
 
     [Fact]
+    public async Task CriarAsync_QuandoValorExcedeSaldoDisponivelDaMesada_NaoRegistraGasto()
+    {
+        var usuarioRepository = new Mock<IUsuarioRepository>();
+        usuarioRepository.Setup(r => r.ObterPorIdAsync(10)).ReturnsAsync(new Usuario("Filho A", "a@teste.com", "hash", PerfilUsuarioEnum.Filho));
+
+        var categoriaRepository = new Mock<ICategoriaFinanceiraRepository>();
+        categoriaRepository.Setup(r => r.ObterPorIdAsync(1)).ReturnsAsync(new CategoriaFinanceira { CategoriaFinanceiraId = 1, Nome = "Lazer" });
+
+        var mesadaDoFilho = new Mesada { MesadaId = 5, FilhoId = 10, Valor = 100, Mes = 8, Ano = 2026 };
+        var mesadaRepository = new Mock<IMesadaRepository>();
+        mesadaRepository.Setup(r => r.ObterPorIdAsync(5)).ReturnsAsync(mesadaDoFilho);
+
+        var autorizacao = new Mock<IAutorizacaoFamiliarService>();
+        autorizacao.Setup(a => a.PodeAcessarFilhoAsync(10)).ReturnsAsync(true);
+
+        var registroRepository = new Mock<IRegistroFinanceiroRepository>();
+        registroRepository.Setup(r => r.ObterTotalGastoPorMesadaAsync(5)).ReturnsAsync(90);
+
+        var servico = CriarServico(usuarioRepository, categoriaRepository, mesadaRepository, autorizacao, registroRepository);
+
+        var dto = new CriarRegistroFinanceiroDto { FilhoId = 10, CategoriaId = 1, MesadaId = 5, Descricao = "Cinema", Valor = 30 };
+        var resultado = await servico.CriarAsync(dto);
+
+        Assert.False(resultado.Sucesso);
+        registroRepository.Verify(r => r.AdicionarAsync(It.IsAny<RegistroFinanceiro>()), Times.Never);
+    }
+
+    [Fact]
     public async Task CriarAsync_QuandoFilhoNaoVinculado_RetornaForbidden()
     {
         var usuarioRepository = new Mock<IUsuarioRepository>();

@@ -5,7 +5,7 @@ namespace GestaoTarefas.Application.Mapping;
 
 public static class MesadaMapping
 {
-    public static RetornoMesadaDto ToDto(this Mesada mesada)
+    public static RetornoMesadaDto ToDto(this Mesada mesada, decimal valorGasto = 0)
     {
         return new RetornoMesadaDto
         {
@@ -14,12 +14,9 @@ public static class MesadaMapping
             NomeFilho = mesada.Filho?.Nome ?? string.Empty,
             Valor = mesada.Valor,
             Mes = mesada.Mes,
-            Ano = mesada.Ano
+            Ano = mesada.Ano,
+            ValorGasto = valorGasto,
+            SaldoDisponivel = mesada.Valor - valorGasto
         };
-    }
-
-    public static IEnumerable<RetornoMesadaDto> ToDtoList(this IEnumerable<Mesada> mesadas)
-    {
-        return mesadas.Select(m => m.ToDto());
     }
 }

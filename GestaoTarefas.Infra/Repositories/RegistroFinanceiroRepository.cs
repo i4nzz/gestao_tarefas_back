@@ -24,6 +24,13 @@ public class RegistroFinanceiroRepository : IRegistroFinanceiroRepository
             .ToListAsync();
     }
 
+    public async Task<decimal> ObterTotalGastoPorMesadaAsync(int mesadaId)
+    {
+        return await _contexto.RegistrosFinanceiros
+            .Where(r => r.MesadaId == mesadaId)
+            .SumAsync(r => r.Valor);
+    }
+
     public async Task AdicionarAsync(RegistroFinanceiro registro)
     {
         await _contexto.RegistrosFinanceiros.AddAsync(registro);

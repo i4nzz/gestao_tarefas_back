@@ -12,16 +12,19 @@ public class MesadaService : IMesadaService
 {
     private readonly IMesadaRepository _mesadaRepository;
     private readonly IUsuarioRepository _usuarioRepository;
+    private readonly IRegistroFinanceiroRepository _registroRepository;
     private readonly IAutorizacaoFamiliarService _autorizacao;
 
     public MesadaService(
         IMesadaRepository mesadaRepository
         , IUsuarioRepository usuarioRepository
+        , IRegistroFinanceiroRepository registroRepository
         , IAutorizacaoFamiliarService autorizacao
         )
     {
         _mesadaRepository = mesadaRepository;
         _usuarioRepository = usuarioRepository;
+        _registroRepository = registroRepository;
         _autorizacao = autorizacao;
     }
 
@@ -39,20 +42,18 @@ public class MesadaService : IMesadaService
 
         var mesadas = await _mesadaRepository.ObterPorFilhoAsync(filhoId);
 
-        if (mesadas == null || !mesadas.Any())
+        var retornoMesadas = new List<RetornoMesadaDto>();
+
+        foreach (var mesada in mesadas)
         {
-            return new RespostaMetodos<IEnumerable<RetornoMesadaDto>>
-            {
-                Sucesso = false,
-                ObjetoRetorno = null,
-                Mensagem = "Nenhuma mesada encontrada para este filho"
-            };
+            var valorGasto = await _registroRepository.ObterTotalGastoPorMesadaAsync(mesada.MesadaId);
+            retornoMesadas.Add(mesada.ToDto(valorGasto));
         }
 
         return new RespostaMetodos<IEnumerable<RetornoMesadaDto>>
         {
             Sucesso = true,
-            ObjetoRetorno = mesadas.ToDtoList(),
+            ObjetoRetorno = retornoMesadas,
             StatusCode = HttpStatusCode.OK,
             Mensagem = "Mesadas obtidas com sucesso"
         };

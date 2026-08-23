@@ -6,5 +6,6 @@ namespace GestaoTarefas.Application.Interfaces;
 public interface IRegistroFinanceiroService
 {
     Task<RespostaMetodos<IEnumerable<RetornoRegistroFinanceiroDto>>> ObterPorFilhoAsync(int filhoId);
+    Task<RespostaMetodos<ResumoFinanceiroFilhoDto>> ObterResumoPorFilhoAsync(int filhoId);
     Task<RespostaMetodos<RetornoRegistroFinanceiroDto>> CriarAsync(CriarRegistroFinanceiroDto dto);
 }

@@ -16,6 +16,10 @@ public class RegistroFinanceiroController : ControllerBase
 {
     private readonly IRegistroFinanceiroService _registroFinanceiroService;
 
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="registroFinanceiroService"></param>
     public RegistroFinanceiroController(IRegistroFinanceiroService registroFinanceiroService)
     {
         _registroFinanceiroService = registroFinanceiroService;
@@ -42,6 +46,29 @@ public class RegistroFinanceiroController : ControllerBase
         }
 
         return StatusCode((int)HttpStatusCode.OK, registros);
+    }
+
+    /// <summary>
+    /// Obtém o resumo financeiro de um filho, com total de mesadas, total gasto, saldo e o detalhamento por categoria (para gráficos/tabelas).
+    /// </summary>
+    [HttpGet]
+    [Route("ObterResumo/{filhoId}")]
+    [Authorize(Roles = "Pai,Filho")]
+    public async Task<IActionResult> ObterResumo(int filhoId)
+    {
+        var resumo = await _registroFinanceiroService.ObterResumoPorFilhoAsync(filhoId);
+
+        if (!resumo.Sucesso)
+        {
+            if (resumo.StatusCode == HttpStatusCode.Forbidden)
+            {
+                return StatusCode((int)HttpStatusCode.Forbidden, resumo);
+            }
+
+            return StatusCode((int)HttpStatusCode.BadRequest, resumo);
+        }
+
+        return StatusCode((int)HttpStatusCode.OK, resumo);
     }
 
     /// <summary>
