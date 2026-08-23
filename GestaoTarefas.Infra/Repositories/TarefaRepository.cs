@@ -45,6 +45,7 @@ public class TarefaRepository : ITarefaRepository
     {
         return await _context.Tarefas
            .Include(t => t.Filho)
+           .Include(t => t.Comprovacoes)
            .ToListAsync();
     }
 

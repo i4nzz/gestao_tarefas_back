@@ -4,6 +4,7 @@ using GestaoTarefas.Application.DTOs.Tarefa;
 using GestaoTarefas.Application.Interfaces;
 using GestaoTarefas.Application.Mapping;
 using GestaoTarefas.Domain.Entities;
+using GestaoTarefas.Domain.Enum;
 using GestaoTarefas.Domain.Interfaces;
 
 namespace GestaoTarefas.Application.Services;
@@ -40,8 +41,6 @@ public class TarefaService : ITarefaService
             };
         }
 
-        // "ObterTodas" retorna apenas as tarefas da família do usuário autenticado,
-        // não existe perfil de administrador com visão de todas as famílias.
         var autorizadas = new List<Tarefa>();
         var acessoPorFilho = new Dictionary<int, bool>();
 
@@ -69,7 +68,7 @@ public class TarefaService : ITarefaService
             };
         }
 
-        var retornoTarefas = autorizadas.ToDtoList();
+        var retornoTarefas = autorizadas.Select(t => t.ToDto(CalcularStatus(t))).ToList();
 
         return new RespostaMetodos<IEnumerable<RetornoTarefaDto>>
         {
@@ -103,7 +102,7 @@ public class TarefaService : ITarefaService
             };
         }
 
-        var retornoTarefas = tarefas.ToDtoList();
+        var retornoTarefas = tarefas.Select(t => t.ToDto(CalcularStatus(t))).ToList();
 
         return new RespostaMetodos<IEnumerable<RetornoTarefaDto>>
         {
@@ -137,7 +136,7 @@ public class TarefaService : ITarefaService
             };
         }
 
-        var retornoTarefa = tarefa.ToDto();
+        var retornoTarefa = tarefa.ToDto(CalcularStatus(tarefa));
 
         return new RespostaMetodos<RetornoTarefaDto?>
         {
@@ -200,7 +199,7 @@ public class TarefaService : ITarefaService
             Prazo = dto.Prazo
         };
 
-        var retornoTarefa = tarefa.ToDto();
+        var retornoTarefa = tarefa.ToDto(CalcularStatus(tarefa));
 
         await _tarefaRepository.AdicionarAsync(tarefa);
 
@@ -275,7 +274,7 @@ public class TarefaService : ITarefaService
 
         await _tarefaRepository.AtualizarAsync(tarefa);
 
-        var retornoTarefa = tarefa.ToDto();
+        var retornoTarefa = tarefa.ToDto(CalcularStatus(tarefa));
 
         return new RespostaMetodos<RetornoTarefaDto>
         {
@@ -315,5 +314,25 @@ public class TarefaService : ITarefaService
             ObjetoRetorno = null,
             Mensagem = "Tarefa removida com sucesso"
         };
+    }
+
+    private static StatusTarefaEnum CalcularStatus(Tarefa tarefa)
+    {
+        if (tarefa.Comprovacoes.Any(c => c.Status == StatusValidacaoTarefaEnum.Aprovada))
+        {
+            return StatusTarefaEnum.Concluida;
+        }
+
+        if (tarefa.Comprovacoes.Any(c => c.Status == StatusValidacaoTarefaEnum.Pendente))
+        {
+            return StatusTarefaEnum.AguardandoValidacao;
+        }
+
+        if (tarefa.Prazo < DateTime.UtcNow)
+        {
+            return StatusTarefaEnum.Expirada;
+        }
+
+        return StatusTarefaEnum.Pendente;
     }
 }

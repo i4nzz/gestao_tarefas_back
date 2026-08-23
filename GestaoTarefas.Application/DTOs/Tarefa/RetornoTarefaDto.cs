@@ -1,4 +1,6 @@
-﻿namespace GestaoTarefas.Application.DTOs.Tarefa;
+﻿using GestaoTarefas.Domain.Enum;
+
+namespace GestaoTarefas.Application.DTOs.Tarefa;
 
 public class RetornoTarefaDto
 {
@@ -10,4 +12,5 @@ public class RetornoTarefaDto
     public int Pontos { get; set; }
     public DateTime Prazo { get; set; }
     public DateTime DataCriacao { get; set; }
+    public StatusTarefaEnum Status { get; set; }
 }

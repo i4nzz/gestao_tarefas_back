@@ -2,8 +2,18 @@ using System.Net;
 
 namespace GestaoTarefas.Helpers;
 
+/// <summary>
+/// 
+/// </summary>
 public static class HtmlPageBuilder
 {
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="sucesso"></param>
+    /// <param name="titulo"></param>
+    /// <param name="mensagem"></param>
+    /// <returns></returns>
     public static string BuildMessagePage(bool sucesso, string titulo, string mensagem)
     {
         var cor = sucesso ? "#16A34A" : "#DC2626";
@@ -28,6 +38,12 @@ public static class HtmlPageBuilder
             """;
     }
 
+    /// <summary>
+    /// Constrói uma página HTML para redefinir a senha, incluindo um formulário para inserir a nova senha e confirmá-la.
+    /// </summary>
+    /// <param name="token"></param>
+    /// <param name="erro"></param>
+    /// <returns></returns>
     public static string BuildRedefinirSenhaForm(string token, string? erro = null)
     {
         var tokenSeguro = WebUtility.HtmlEncode(token ?? string.Empty);

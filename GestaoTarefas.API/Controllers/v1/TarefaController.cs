@@ -6,6 +6,9 @@ using GestaoTarefas.Application.Interfaces;
 
 namespace GestaoTarefas.Controllers.v1;
 
+/// <summary>
+/// Controller para gerenciar as tarefas associadas à mesada de um filho.
+/// </summary>
 [ApiController]
 [Route("api/v1/[controller]")]
 [Authorize]
@@ -13,6 +16,10 @@ public class TarefaController : ControllerBase
 {
     private readonly ITarefaService _tarefaService;
 
+    /// <summary>
+    /// Inicializa uma nova instância da classe <see cref="TarefaController"/>.
+    /// </summary>
+    /// <param name="tarefaService"></param>
     public TarefaController(ITarefaService tarefaService)
     {
         _tarefaService = tarefaService;
