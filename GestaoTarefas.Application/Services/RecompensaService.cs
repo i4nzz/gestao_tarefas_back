@@ -253,6 +253,46 @@ public class RecompensaService : IRecompensaService
         };
     }
 
+    public async Task<RespostaMetodos<RetornoRecompensaDto>> AtivarAsync(int id)
+    {
+        var recompensa = await _recompensaRepository.ObterPorIdAsync(id);
+
+        if (recompensa == null)
+        {
+            return new RespostaMetodos<RetornoRecompensaDto>
+            {
+                Sucesso = false,
+                Mensagem = "Recompensa não encontrada."
+            };
+        }
+
+        if (!await _autorizacao.PodeAcessarFilhoAsync(recompensa.FilhoId))
+        {
+            return new RespostaMetodos<RetornoRecompensaDto>
+            {
+                Sucesso = false,
+                StatusCode = HttpStatusCode.Forbidden,
+                Mensagem = "Você não tem permissão para reativar esta recompensa"
+            };
+        }
+
+        if (!recompensa.Ativa)
+        {
+            recompensa.Ativa = true;
+            await _recompensaRepository.AtualizarAsync(recompensa);
+        }
+
+        var retornoRecompensa = recompensa.ToDto();
+
+        return new RespostaMetodos<RetornoRecompensaDto>
+        {
+            Sucesso = true,
+            ObjetoRetorno = retornoRecompensa,
+            StatusCode = HttpStatusCode.OK,
+            Mensagem = "Recompensa ativada com sucesso."
+        };
+    }
+
     public async Task<RespostaMetodos<RetornoRecompensaResgatadaDto>> ResgatarAsync(int filhoId, int recompensaId)
     {
         if (!await _autorizacao.PodeAcessarFilhoAsync(filhoId))
@@ -287,28 +327,30 @@ public class RecompensaService : IRecompensaService
             };
         }
 
-        var ganhos = await _pontuacaoRepository.ObterTotalPontosAsync(filhoId);
-        var resgates = await _resgatePontuacaoRepository.ObterTotalResgatesAsync(filhoId);
-        var saldoAtual = ganhos - resgates;
-
-        if (saldoAtual < recompensa.PontosNecessarios)
-        {
-            return new RespostaMetodos<RetornoRecompensaResgatadaDto>
-            {
-                Sucesso = false,
-                ObjetoRetorno = null,
-                Mensagem = "Pontos insuficientes para resgatar esta recompensa."
-            };
-        }
-
         var resgatada = new RecompensaResgatada(filhoId, recompensaId);
         var resgate = ResgatePontuacao.Criar(filhoId, recompensaId, recompensa.PontosNecessarios);
 
         using (var transacao = new TransactionScope(
             TransactionScopeOption.Required,
-            new TransactionOptions { IsolationLevel = IsolationLevel.ReadCommitted },
+            new TransactionOptions { IsolationLevel = IsolationLevel.Serializable },
             TransactionScopeAsyncFlowOption.Enabled))
         {
+            // Recalcula o saldo dentro da transação serializável para bloquear resgates
+            // concorrentes do mesmo filho e impedir que o saldo fique negativo.
+            var ganhos = await _pontuacaoRepository.ObterTotalPontosAsync(filhoId);
+            var resgates = await _resgatePontuacaoRepository.ObterTotalResgatesAsync(filhoId);
+            var saldoAtual = ganhos - resgates;
+
+            if (saldoAtual < recompensa.PontosNecessarios)
+            {
+                return new RespostaMetodos<RetornoRecompensaResgatadaDto>
+                {
+                    Sucesso = false,
+                    ObjetoRetorno = null,
+                    Mensagem = "Pontos insuficientes para resgatar esta recompensa."
+                };
+            }
+
             await _recompensaRepository.ResgatarAsync(resgatada);
             await _resgatePontuacaoRepository.AdicionarAsync(resgate);
 

@@ -18,7 +18,8 @@ public static class TarefaMapping
             Pontos = tarefa.Pontos,
             Prazo = tarefa.Prazo,
             DataCriacao = tarefa.DataCriacao,
-            Status = status
+            Status = status,
+            Arquivada = tarefa.Arquivada
         };
     }
 }

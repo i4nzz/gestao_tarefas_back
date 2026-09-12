@@ -18,7 +18,7 @@ public class RecompensaRepository : IRecompensaRepository
     {
         return await _contexto.Recompensas
             .Include(r => r.Filho)
-            .Where(r => r.FilhoId == filhoId && r.Ativa)
+            .Where(r => r.FilhoId == filhoId)
             .ToListAsync();
     }
 

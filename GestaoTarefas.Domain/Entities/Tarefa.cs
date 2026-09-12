@@ -9,6 +9,7 @@ public class Tarefa
     public int Pontos { get; set; }
     public DateTime Prazo { get; set; }
     public DateTime DataCriacao { get; set; } = DateTime.UtcNow;
+    public bool Arquivada { get; set; }
     public Usuario Filho { get; set; } = null!;
     public ICollection<ComprovacaoTarefa> Comprovacoes { get; set; } = new List<ComprovacaoTarefa>();
 }

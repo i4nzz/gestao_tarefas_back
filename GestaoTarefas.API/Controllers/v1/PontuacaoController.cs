@@ -44,7 +44,7 @@ public class PontuacaoController : ControllerBase
                 return StatusCode((int)HttpStatusCode.Forbidden, pontuacoes);
             }
 
-            return StatusCode((int)HttpStatusCode.NoContent, pontuacoes);
+            return NoContent();
         }
 
         return StatusCode((int)HttpStatusCode.OK, pontuacoes.ObjetoRetorno);
@@ -69,7 +69,7 @@ public class PontuacaoController : ControllerBase
                 return StatusCode((int)HttpStatusCode.Forbidden, total.Mensagem);
             }
 
-            return StatusCode((int)HttpStatusCode.NoContent, total.Mensagem);
+            return NoContent();
         }
 
         return StatusCode((int)HttpStatusCode.OK, total.ObjetoRetorno);

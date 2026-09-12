@@ -24,6 +24,10 @@ namespace GestaoTarefas.Infra.Mappings
             builder.Property(x => x.DataCriacao)
                    .IsRequired();
 
+            builder.Property(x => x.Arquivada)
+                   .IsRequired()
+                   .HasDefaultValue(false);
+
             builder.HasOne(x => x.Filho)
                    .WithMany()
                    .HasForeignKey(x => x.FilhoId)

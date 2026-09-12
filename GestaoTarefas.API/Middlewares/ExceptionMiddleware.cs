@@ -35,7 +35,10 @@ public class ExceptionMiddleware
         {
             await _next(httpContext);
         }
-
+        catch (OperationCanceledException ex) when (httpContext.RequestAborted.IsCancellationRequested)
+        {
+            _logger.LogInformation(ex, "Requisição cancelada pelo cliente");
+        }
         catch (KeyNotFoundException ex)
         {
             _logger.LogWarning(ex, "Recurso não encontrado");
@@ -62,6 +65,11 @@ public class ExceptionMiddleware
 
     private static async Task EscreverResposta(HttpContext httpContext, HttpStatusCode statusCode, string mensagem)
     {
+        if (httpContext.Response.HasStarted)
+        {
+            return;
+        }
+
         httpContext.Response.ContentType = "application/json";
         httpContext.Response.StatusCode = (int)statusCode;
 

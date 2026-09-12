@@ -29,7 +29,7 @@ public class TarefaRepository : ITarefaRepository
     {
         return await _context.Tarefas
             .Include(t => t.Comprovacoes)
-            .Where(t => t.FilhoId == filhoId)
+            .Where(t => t.FilhoId == filhoId && !t.Arquivada)
             .ToListAsync();
     }
 
@@ -46,6 +46,7 @@ public class TarefaRepository : ITarefaRepository
         return await _context.Tarefas
            .Include(t => t.Filho)
            .Include(t => t.Comprovacoes)
+           .Where(t => !t.Arquivada)
            .ToListAsync();
     }
 

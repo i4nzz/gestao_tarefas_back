@@ -13,11 +13,13 @@ public class TarefaServiceTests
     private static TarefaService CriarServico(
         Mock<ITarefaRepository> tarefaRepository,
         Mock<IAutorizacaoFamiliarService> autorizacao,
-        Mock<IUsuarioRepository>? usuarioRepository = null)
+        Mock<IUsuarioRepository>? usuarioRepository = null,
+        Mock<IPontuacaoRepository>? pontuacaoRepository = null)
     {
         return new TarefaService(
             tarefaRepository.Object,
             (usuarioRepository ?? new Mock<IUsuarioRepository>()).Object,
+            (pontuacaoRepository ?? new Mock<IPontuacaoRepository>()).Object,
             autorizacao.Object);
     }
 

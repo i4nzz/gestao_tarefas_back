@@ -27,7 +27,7 @@ namespace GestaoTarefas.Infra.Mappings
                    .WithMany()
                    .HasForeignKey(x => x.TarefaId)
                    .IsRequired(false)
-                   .OnDelete(DeleteBehavior.Cascade);
+                   .OnDelete(DeleteBehavior.Restrict);
         }
     }
 

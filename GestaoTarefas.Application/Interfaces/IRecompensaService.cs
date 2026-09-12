@@ -10,6 +10,7 @@ public interface IRecompensaService
     Task<RespostaMetodos<RetornoRecompensaDto>> CriarAsync(CriarRecompensaDto dto);
     Task<RespostaMetodos<RetornoRecompensaDto>> AtualizarAsync(int id, CriarRecompensaDto dto);
     Task<RespostaMetodos<RetornoRecompensaDto>> RemoverAsync(int id);
+    Task<RespostaMetodos<RetornoRecompensaDto>> AtivarAsync(int id);
     Task<RespostaMetodos<RetornoRecompensaResgatadaDto>> ResgatarAsync(int filhoId, int recompensaId);
     Task<RespostaMetodos<IEnumerable<RetornoRecompensaResgatadaDto>>> ObterResgatadasPorFilhoAsync(int filhoId);
 }

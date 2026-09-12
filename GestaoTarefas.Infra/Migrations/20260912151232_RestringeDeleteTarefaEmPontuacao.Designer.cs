@@ -4,6 +4,7 @@ using GestaoTarefas.Infra.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace GestaoTarefas.Infra.Migrations
 {
     [DbContext(typeof(AppDbContexto))]
-    partial class AppDbContextoModelSnapshot : ModelSnapshot
+    [Migration("20260912151232_RestringeDeleteTarefaEmPontuacao")]
+    partial class RestringeDeleteTarefaEmPontuacao
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -335,11 +338,6 @@ namespace GestaoTarefas.Infra.Migrations
                         .HasColumnType("int");
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("TarefaId"));
-
-                    b.Property<bool>("Arquivada")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("bit")
-                        .HasDefaultValue(false);
 
                     b.Property<DateTime>("DataCriacao")
                         .HasColumnType("datetime2");

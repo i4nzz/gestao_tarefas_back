@@ -150,6 +150,31 @@ public class RecompensaController : ControllerBase
     }
 
     /// <summary>
+    /// Reativar uma recompensa previamente desativada.
+    /// </summary>
+    /// <param name="id">ID da recompensa</param>
+    /// <returns>Resultado da operação</returns>
+    [HttpPut]
+    [Route("Ativar/{id}")]
+    [Authorize(Roles = "Pai")]
+    public async Task<IActionResult> Ativar(int id)
+    {
+        var ativado = await _recompensaService.AtivarAsync(id);
+
+        if (!ativado.Sucesso)
+        {
+            if (ativado.StatusCode == HttpStatusCode.Forbidden)
+            {
+                return StatusCode((int)HttpStatusCode.Forbidden, ativado);
+            }
+
+            return StatusCode((int)HttpStatusCode.BadRequest, ativado);
+        }
+
+        return StatusCode((int)HttpStatusCode.OK, ativado);
+    }
+
+    /// <summary>
     /// Resgatar uma recompensa para um filho específico.
     /// </summary>
     /// <param name="filhoId">ID do filho</param>

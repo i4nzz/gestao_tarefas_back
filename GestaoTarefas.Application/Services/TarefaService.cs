@@ -13,17 +13,20 @@ public class TarefaService : ITarefaService
 {
     private readonly ITarefaRepository _tarefaRepository;
     private readonly IUsuarioRepository _usuarioRepository;
+    private readonly IPontuacaoRepository _pontuacaoRepository;
     private readonly IAutorizacaoFamiliarService _autorizacao;
 
 
     public TarefaService(
         ITarefaRepository tarefaRepository
         , IUsuarioRepository usuarioRepository
+        , IPontuacaoRepository pontuacaoRepository
         , IAutorizacaoFamiliarService autorizacao
         )
     {
         _tarefaRepository = tarefaRepository;
         _usuarioRepository = usuarioRepository;
+        _pontuacaoRepository = pontuacaoRepository;
         _autorizacao = autorizacao;
     }
 
@@ -303,6 +306,25 @@ public class TarefaService : ITarefaService
                 Sucesso = false,
                 StatusCode = HttpStatusCode.Forbidden,
                 Mensagem = "Você não tem permissão para remover esta tarefa"
+            };
+        }
+
+        if (await _pontuacaoRepository.ExisteAsync(tarefaId, tarefa.FilhoId))
+        {
+            // Tarefa já gerou pontuação: apagar de verdade quebraria o saldo do filho
+            // (a linha de pontuacao cairia junto). Em vez disso, só arquivamos: ela some
+            // da lista, mas o histórico de pontos continua íntegro no banco.
+            if (!tarefa.Arquivada)
+            {
+                tarefa.Arquivada = true;
+                await _tarefaRepository.AtualizarAsync(tarefa);
+            }
+
+            return new RespostaMetodos<RetornoTarefaDto>
+            {
+                Sucesso = true,
+                ObjetoRetorno = null,
+                Mensagem = "Esta tarefa já gerou pontuação e foi arquivada em vez de removida."
             };
         }
 
