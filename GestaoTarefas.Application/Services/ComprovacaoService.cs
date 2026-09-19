@@ -14,6 +14,8 @@ public class ComprovacaoService : IComprovacaoService
     private readonly IComprovacaoRepository _comprovacaoRepository;
     private readonly ITarefaRepository _tarefaRepository;
     private readonly IPontuacaoRepository _pontuacaoRepository;
+    private readonly IUsuarioRepository _usuarioRepository;
+    private readonly IEmailService _emailService;
 
     private readonly IFileStorageService _fileStorageService;
     private readonly IAutorizacaoFamiliarService _autorizacao;
@@ -21,6 +23,8 @@ public class ComprovacaoService : IComprovacaoService
         IComprovacaoRepository comprovacaoRepository
         , IPontuacaoRepository pontuacaoRepository
         , ITarefaRepository tarefaRepository
+        , IUsuarioRepository usuarioRepository
+        , IEmailService emailService
         , IFileStorageService fileStorageService
         , IAutorizacaoFamiliarService autorizacao
         )
@@ -28,6 +32,8 @@ public class ComprovacaoService : IComprovacaoService
         _comprovacaoRepository = comprovacaoRepository;
         _tarefaRepository = tarefaRepository;
         _pontuacaoRepository = pontuacaoRepository;
+        _usuarioRepository = usuarioRepository;
+        _emailService = emailService;
         _fileStorageService = fileStorageService;
         _autorizacao = autorizacao;
     }
@@ -218,6 +224,8 @@ public class ComprovacaoService : IComprovacaoService
 
         await _comprovacaoRepository.AdicionarAsync(comprovacao);
 
+        await NotificarPaisAsync(tarefa);
+
         var retornoComprovacao = comprovacao.ToDto();
 
         return new RespostaMetodos<RetornoComprovacaoDto>
@@ -317,5 +325,19 @@ public class ComprovacaoService : IComprovacaoService
             ObjetoRetorno = retornoComprovacao,
             Mensagem = aprovar ? "Comprovação aprovada com sucesso" : "Comprovação reprovada com sucesso"
         };
+    }
+
+    private async Task NotificarPaisAsync(Tarefa tarefa)
+    {
+        var pais = await _usuarioRepository.ObterPaisPorFilhoIdAsync(tarefa.FilhoId);
+        var nomeFilho = tarefa.Filho?.Nome ?? "Seu filho";
+
+        foreach (var pai in pais)
+        {
+            await _emailService.EnviarNotificacaoSistemaAsync(
+                pai.Email,
+                "Nova tarefa aguardando validação",
+                $"{nomeFilho} enviou uma comprovação para a tarefa \"{tarefa.Titulo}\" e ela está aguardando sua validação no Task Kids.");
+        }
     }
 }

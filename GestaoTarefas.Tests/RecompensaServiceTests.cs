@@ -94,6 +94,52 @@ public class RecompensaServiceTests
     }
 
     [Fact]
+    public async Task AtualizarAsync_QuandoRecompensaJaFoiResgatada_BloqueiaEdicao()
+    {
+        var recompensa = new Recompensa { Id = 1, FilhoId = 10, Descricao = "Bicicleta", PontosNecessarios = 100 };
+        recompensa.RecompensasResgatadas.Add(new RecompensaResgatada(10, 1));
+
+        var recompensaRepository = new Mock<IRecompensaRepository>();
+        recompensaRepository.Setup(r => r.ObterPorIdAsync(1)).ReturnsAsync(recompensa);
+
+        var autorizacao = new Mock<IAutorizacaoFamiliarService>();
+        autorizacao.Setup(a => a.PodeAcessarFilhoAsync(10)).ReturnsAsync(true);
+
+        var servico = CriarServico(recompensaRepository, autorizacao);
+
+        var dto = new CriarRecompensaDto { FilhoId = 10, Descricao = "Jogo novo", PontosNecessarios = 50 };
+        var resultado = await servico.AtualizarAsync(1, dto);
+
+        Assert.False(resultado.Sucesso);
+        Assert.Equal(HttpStatusCode.Conflict, resultado.StatusCode);
+        Assert.Equal("Bicicleta", recompensa.Descricao);
+        recompensaRepository.Verify(r => r.AtualizarAsync(It.IsAny<Recompensa>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task RemoverAsync_QuandoRecompensaJaFoiResgatada_BloqueiaDesativacao()
+    {
+        var recompensa = new Recompensa { Id = 1, FilhoId = 10, Descricao = "Bicicleta", PontosNecessarios = 100, Ativa = true };
+        recompensa.RecompensasResgatadas.Add(new RecompensaResgatada(10, 1));
+
+        var recompensaRepository = new Mock<IRecompensaRepository>();
+        recompensaRepository.Setup(r => r.ObterPorIdAsync(1)).ReturnsAsync(recompensa);
+
+        var autorizacao = new Mock<IAutorizacaoFamiliarService>();
+        autorizacao.Setup(a => a.PodeAcessarFilhoAsync(10)).ReturnsAsync(true);
+
+        var servico = CriarServico(recompensaRepository, autorizacao);
+
+        var resultado = await servico.RemoverAsync(1);
+
+        Assert.False(resultado.Sucesso);
+        Assert.Equal(HttpStatusCode.Conflict, resultado.StatusCode);
+        Assert.True(recompensa.Ativa);
+        recompensaRepository.Verify(r => r.AtualizarAsync(It.IsAny<Recompensa>()), Times.Never);
+        recompensaRepository.Verify(r => r.RemoverAsync(It.IsAny<int>()), Times.Never);
+    }
+
+    [Fact]
     public async Task ResgatarAsync_QuandoSaldoSuficiente_DebitaApenasEmResgatePontuacao()
     {
         var recompensa = new Recompensa { Id = 1, FilhoId = 10, Descricao = "Bicicleta", PontosNecessarios = 100, Ativa = true };

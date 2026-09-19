@@ -15,7 +15,8 @@ public static class RecompensaMapping
             NomeFilho = recompensa.Filho?.Nome ?? string.Empty,
             Descricao = recompensa.Descricao,
             PontosNecessarios = recompensa.PontosNecessarios,
-            Ativa = recompensa.Ativa
+            Ativa = recompensa.Ativa,
+            Resgatada = recompensa.RecompensasResgatadas?.Any() ?? false
         };
     }
 

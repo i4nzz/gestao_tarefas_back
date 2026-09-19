@@ -14,4 +14,5 @@ public class RetornoTarefaDto
     public DateTime DataCriacao { get; set; }
     public StatusTarefaEnum Status { get; set; }
     public bool Arquivada { get; set; }
+    public StatusValidacaoTarefaEnum? UltimaComprovacaoStatus { get; set; }
 }

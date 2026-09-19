@@ -12,6 +12,7 @@ public interface IUsuarioRepository
     Task<Usuario?> ObterPorEmailAsync(string email);
     Task AdicionarFilhoAsync(Filho filho, PaisFilhos vinculo);
     Task<IEnumerable<Usuario>> ObterFilhosPorPaiIdAsync(int paiId);
+    Task<IEnumerable<Usuario>> ObterPaisPorFilhoIdAsync(int filhoId);
     Task<Usuario?> ObterPorTokenConfirmacaoEmailAsync(string token);
     Task<Usuario?> ObterPorTokenResetSenhaAsync(string token);
     Task<bool> ExisteVinculoAsync(int paiId, int filhoId);

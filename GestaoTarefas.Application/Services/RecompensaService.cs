@@ -191,6 +191,16 @@ public class RecompensaService : IRecompensaService
             };
         }
 
+        if (recompensa.RecompensasResgatadas.Any())
+        {
+            return new RespostaMetodos<RetornoRecompensaDto>
+            {
+                Sucesso = false,
+                StatusCode = HttpStatusCode.Conflict,
+                Mensagem = "Não é possível editar uma recompensa que já foi resgatada."
+            };
+        }
+
         recompensa.FilhoId = dto.FilhoId;
         recompensa.Descricao = dto.Descricao;
         recompensa.PontosNecessarios = dto.PontosNecessarios;
@@ -227,6 +237,16 @@ public class RecompensaService : IRecompensaService
                 Sucesso = false,
                 StatusCode = HttpStatusCode.Forbidden,
                 Mensagem = "Você não tem permissão para remover esta recompensa"
+            };
+        }
+
+        if (recompensa.RecompensasResgatadas.Any())
+        {
+            return new RespostaMetodos<RetornoRecompensaDto>
+            {
+                Sucesso = false,
+                StatusCode = HttpStatusCode.Conflict,
+                Mensagem = "Não é possível desativar ou remover uma recompensa que já foi resgatada."
             };
         }
 

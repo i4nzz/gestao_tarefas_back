@@ -43,6 +43,15 @@ public class UsuarioRepository : IUsuarioRepository
             .ToListAsync();
     }
 
+    public async Task<IEnumerable<Usuario>> ObterPaisPorFilhoIdAsync(int filhoId)
+    {
+        return await _context.PaisFilhos
+            .Where(pf => pf.FilhoId == filhoId)
+            .Select(pf => pf.Pai)
+            .Cast<Usuario>()
+            .ToListAsync();
+    }
+
     public async Task<Usuario?> ObterPorTokenConfirmacaoEmailAsync(string token)
     {
         return await _context.Usuarios.FirstOrDefaultAsync(u => u.TokenConfirmacaoEmail == token);

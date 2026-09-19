@@ -19,7 +19,10 @@ public static class TarefaMapping
             Prazo = tarefa.Prazo,
             DataCriacao = tarefa.DataCriacao,
             Status = status,
-            Arquivada = tarefa.Arquivada
+            Arquivada = tarefa.Arquivada,
+            UltimaComprovacaoStatus = tarefa.Comprovacoes
+                .OrderByDescending(c => c.DataEnvio)
+                .FirstOrDefault()?.Status
         };
     }
 }

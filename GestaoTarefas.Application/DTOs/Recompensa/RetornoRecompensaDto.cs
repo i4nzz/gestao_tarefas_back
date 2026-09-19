@@ -8,4 +8,5 @@ public class RetornoRecompensaDto
     public string? Descricao { get; set; }
     public int PontosNecessarios { get; set; }
     public bool Ativa { get; set; }
+    public bool Resgatada { get; set; }
 }

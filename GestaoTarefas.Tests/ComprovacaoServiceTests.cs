@@ -17,12 +17,16 @@ public class ComprovacaoServiceTests
         Mock<IAutorizacaoFamiliarService> autorizacao,
         Mock<IComprovacaoRepository>? comprovacaoRepository = null,
         Mock<IPontuacaoRepository>? pontuacaoRepository = null,
-        Mock<IFileStorageService>? fileStorageService = null)
+        Mock<IFileStorageService>? fileStorageService = null,
+        Mock<IUsuarioRepository>? usuarioRepository = null,
+        Mock<IEmailService>? emailService = null)
     {
         return new ComprovacaoService(
             (comprovacaoRepository ?? new Mock<IComprovacaoRepository>()).Object,
             (pontuacaoRepository ?? new Mock<IPontuacaoRepository>()).Object,
             tarefaRepository.Object,
+            (usuarioRepository ?? new Mock<IUsuarioRepository>()).Object,
+            (emailService ?? new Mock<IEmailService>()).Object,
             (fileStorageService ?? new Mock<IFileStorageService>()).Object,
             autorizacao.Object);
     }
@@ -52,6 +56,49 @@ public class ComprovacaoServiceTests
         Assert.Equal(HttpStatusCode.Forbidden, resultado.StatusCode);
         fileStorageService.Verify(f => f.SalvarArquivoAsync(It.IsAny<IFormFile>(), It.IsAny<string>()), Times.Never);
         comprovacaoRepository.Verify(r => r.AdicionarAsync(It.IsAny<ComprovacaoTarefa>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task EnviarAsync_QuandoComprovacaoEnviadaComSucesso_NotificaPaisVinculadosPorEmail()
+    {
+        var filho = new Filho("Léo", "leo@teste.com", "hash", DateTime.UtcNow.AddYears(-10));
+        var tarefa = new Tarefa { TarefaId = 5, FilhoId = 20, Titulo = "Lavar louça", Pontos = 10, Filho = filho };
+        var tarefaRepository = new Mock<ITarefaRepository>();
+        tarefaRepository.Setup(r => r.ObterPorIdAsync(5)).ReturnsAsync(tarefa);
+
+        var autorizacao = new Mock<IAutorizacaoFamiliarService>();
+        autorizacao.Setup(a => a.PodeAcessarFilhoAsync(20)).ReturnsAsync(true);
+
+        var fileStorageService = new Mock<IFileStorageService>();
+        fileStorageService.Setup(f => f.SalvarArquivoAsync(It.IsAny<IFormFile>(), It.IsAny<string>())).ReturnsAsync("Comprovacoes/foto.jpg");
+
+        var comprovacaoRepository = new Mock<IComprovacaoRepository>();
+
+        var pai1 = new Pai("Ana", "ana@teste.com", "hash");
+        var pai2 = new Pai("Bruno", "bruno@teste.com", "hash");
+        var usuarioRepository = new Mock<IUsuarioRepository>();
+        usuarioRepository.Setup(r => r.ObterPaisPorFilhoIdAsync(20)).ReturnsAsync(new List<Usuario> { pai1, pai2 });
+
+        var emailService = new Mock<IEmailService>();
+
+        var servico = CriarServico(
+            tarefaRepository,
+            autorizacao,
+            comprovacaoRepository,
+            fileStorageService: fileStorageService,
+            usuarioRepository: usuarioRepository,
+            emailService: emailService);
+
+        var foto = new Mock<IFormFile>();
+        foto.Setup(f => f.Length).Returns(100);
+
+        var dto = new CriarComprovacaoDto { TarefaId = 5, Foto = foto.Object };
+        var resultado = await servico.EnviarAsync(dto);
+
+        Assert.True(resultado.Sucesso);
+        comprovacaoRepository.Verify(r => r.AdicionarAsync(It.IsAny<ComprovacaoTarefa>()), Times.Once);
+        emailService.Verify(e => e.EnviarNotificacaoSistemaAsync("ana@teste.com", It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()), Times.Once);
+        emailService.Verify(e => e.EnviarNotificacaoSistemaAsync("bruno@teste.com", It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]
