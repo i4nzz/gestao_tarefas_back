@@ -16,6 +16,10 @@ public class MesadaController : ControllerBase
 {
     private readonly IMesadaService _mesadaService;
 
+    /// <summary>
+    /// Construtor da controller de mesadas, recebendo a dependência do serviço de mesadas via injeção de dependência.
+    /// </summary>
+    /// <param name="mesadaService"></param>
     public MesadaController(IMesadaService mesadaService)
     {
         _mesadaService = mesadaService;
