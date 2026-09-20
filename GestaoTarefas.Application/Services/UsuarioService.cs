@@ -279,13 +279,18 @@ public class UsuarioService : IUsuarioService
             };
         }
 
-        if (id != _currentUser.UsuarioId)
+        var isProprioUsuario = id == _currentUser.UsuarioId;
+        var isPaiDoUsuario = !isProprioUsuario
+            && _currentUser.Perfil == PerfilUsuarioEnum.Pai
+            && await _usuarioRepository.ExisteVinculoAsync(_currentUser.UsuarioId, id);
+
+        if (!isProprioUsuario && !isPaiDoUsuario)
         {
             return new RespostaMetodos<RetornoUsuarioDto>
             {
                 Sucesso = false,
                 StatusCode = HttpStatusCode.Forbidden,
-                Mensagem = "Você só pode atualizar os seus próprios dados"
+                Mensagem = "Você só pode atualizar os seus próprios dados ou os dados de um filho vinculado a você"
             };
         }
 
@@ -306,6 +311,44 @@ public class UsuarioService : IUsuarioService
             Sucesso = true,
             ObjetoRetorno = usuarioRetorno,
             Mensagem = "Usuário atualizado com sucesso"
+        };
+    }
+
+    public async Task<RespostaMetodos<RetornoUsuarioDto>> AlterarStatusAsync(int id, AlterarStatusUsuarioDto dto)
+    {
+        var usuario = await _usuarioRepository.ObterPorIdAsync(id);
+        if (usuario == null)
+        {
+            return new RespostaMetodos<RetornoUsuarioDto>
+            {
+                Sucesso = false,
+                ObjetoRetorno = null,
+                Mensagem = "Usuário não encontrado"
+            };
+        }
+
+        var isPaiDoFilho = _currentUser.Perfil == PerfilUsuarioEnum.Pai
+            && await _usuarioRepository.ExisteVinculoAsync(_currentUser.UsuarioId, id);
+
+        if (!isPaiDoFilho)
+        {
+            return new RespostaMetodos<RetornoUsuarioDto>
+            {
+                Sucesso = false,
+                StatusCode = HttpStatusCode.Forbidden,
+                Mensagem = "Você só pode alterar o status de um filho vinculado a você"
+            };
+        }
+
+        usuario.Ativo = dto.Ativo;
+
+        await _usuarioRepository.AtualizarAsync(usuario);
+
+        return new RespostaMetodos<RetornoUsuarioDto>
+        {
+            Sucesso = true,
+            ObjetoRetorno = usuario.ToDto(),
+            Mensagem = dto.Ativo ? "Usuário ativado com sucesso" : "Usuário inativado com sucesso"
         };
     }
 

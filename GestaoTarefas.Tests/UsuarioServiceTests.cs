@@ -156,6 +156,114 @@ public class UsuarioServiceTests
     }
 
     [Fact]
+    public async Task AtualizarAsync_QuandoPaiTemVinculoComFilho_AtualizaOsDadosDoFilho()
+    {
+        var filho = new Usuario("Filho A", "a@teste.com", "hash", PerfilUsuarioEnum.Filho);
+        var usuarioRepository = new Mock<IUsuarioRepository>();
+        usuarioRepository.Setup(r => r.ObterPorIdAsync(10)).ReturnsAsync(filho);
+        usuarioRepository.Setup(r => r.ExisteVinculoAsync(1, 10)).ReturnsAsync(true);
+
+        var currentUser = new Mock<ICurrentUserService>();
+        currentUser.Setup(c => c.UsuarioId).Returns(1);
+        currentUser.Setup(c => c.Perfil).Returns(PerfilUsuarioEnum.Pai);
+
+        var servico = CriarServico(usuarioRepository, currentUser);
+
+        var dto = new AtualizarUsuarioDto { Nome = "Filho Renomeado", Email = "novo@teste.com" };
+        var resultado = await servico.AtualizarAsync(10, dto);
+
+        Assert.True(resultado.Sucesso);
+        Assert.Equal("Filho Renomeado", filho.Nome);
+        Assert.Equal("novo@teste.com", filho.Email);
+        usuarioRepository.Verify(r => r.AtualizarAsync(filho), Times.Once);
+    }
+
+    [Fact]
+    public async Task AtualizarAsync_QuandoPaiNaoTemVinculoComFilho_RetornaForbiddenENaoSalva()
+    {
+        var filho = new Usuario("Filho A", "a@teste.com", "hash", PerfilUsuarioEnum.Filho);
+        var usuarioRepository = new Mock<IUsuarioRepository>();
+        usuarioRepository.Setup(r => r.ObterPorIdAsync(10)).ReturnsAsync(filho);
+        usuarioRepository.Setup(r => r.ExisteVinculoAsync(1, 10)).ReturnsAsync(false);
+
+        var currentUser = new Mock<ICurrentUserService>();
+        currentUser.Setup(c => c.UsuarioId).Returns(1);
+        currentUser.Setup(c => c.Perfil).Returns(PerfilUsuarioEnum.Pai);
+
+        var servico = CriarServico(usuarioRepository, currentUser);
+
+        var dto = new AtualizarUsuarioDto { Nome = "Outro nome", Email = "outro@teste.com" };
+        var resultado = await servico.AtualizarAsync(10, dto);
+
+        Assert.False(resultado.Sucesso);
+        Assert.Equal(HttpStatusCode.Forbidden, resultado.StatusCode);
+        usuarioRepository.Verify(r => r.AtualizarAsync(It.IsAny<Usuario>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task AlterarStatusAsync_QuandoPaiTemVinculoComFilho_InativaOUsuario()
+    {
+        var filho = new Usuario("Filho A", "a@teste.com", "hash", PerfilUsuarioEnum.Filho);
+        var usuarioRepository = new Mock<IUsuarioRepository>();
+        usuarioRepository.Setup(r => r.ObterPorIdAsync(10)).ReturnsAsync(filho);
+        usuarioRepository.Setup(r => r.ExisteVinculoAsync(1, 10)).ReturnsAsync(true);
+
+        var currentUser = new Mock<ICurrentUserService>();
+        currentUser.Setup(c => c.UsuarioId).Returns(1);
+        currentUser.Setup(c => c.Perfil).Returns(PerfilUsuarioEnum.Pai);
+
+        var servico = CriarServico(usuarioRepository, currentUser);
+
+        var resultado = await servico.AlterarStatusAsync(10, new AlterarStatusUsuarioDto { Ativo = false });
+
+        Assert.True(resultado.Sucesso);
+        Assert.False(filho.Ativo);
+        usuarioRepository.Verify(r => r.AtualizarAsync(filho), Times.Once);
+    }
+
+    [Fact]
+    public async Task AlterarStatusAsync_QuandoPaiNaoTemVinculoComFilho_RetornaForbiddenENaoAltera()
+    {
+        var filho = new Usuario("Filho A", "a@teste.com", "hash", PerfilUsuarioEnum.Filho);
+        var usuarioRepository = new Mock<IUsuarioRepository>();
+        usuarioRepository.Setup(r => r.ObterPorIdAsync(10)).ReturnsAsync(filho);
+        usuarioRepository.Setup(r => r.ExisteVinculoAsync(1, 10)).ReturnsAsync(false);
+
+        var currentUser = new Mock<ICurrentUserService>();
+        currentUser.Setup(c => c.UsuarioId).Returns(1);
+        currentUser.Setup(c => c.Perfil).Returns(PerfilUsuarioEnum.Pai);
+
+        var servico = CriarServico(usuarioRepository, currentUser);
+
+        var resultado = await servico.AlterarStatusAsync(10, new AlterarStatusUsuarioDto { Ativo = false });
+
+        Assert.False(resultado.Sucesso);
+        Assert.Equal(HttpStatusCode.Forbidden, resultado.StatusCode);
+        Assert.True(filho.Ativo);
+        usuarioRepository.Verify(r => r.AtualizarAsync(It.IsAny<Usuario>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task AlterarStatusAsync_QuandoUsuarioAutenticadoNaoEPai_RetornaForbidden()
+    {
+        var outroFilho = new Usuario("Filho B", "b@teste.com", "hash", PerfilUsuarioEnum.Filho);
+        var usuarioRepository = new Mock<IUsuarioRepository>();
+        usuarioRepository.Setup(r => r.ObterPorIdAsync(10)).ReturnsAsync(outroFilho);
+
+        var currentUser = new Mock<ICurrentUserService>();
+        currentUser.Setup(c => c.UsuarioId).Returns(5);
+        currentUser.Setup(c => c.Perfil).Returns(PerfilUsuarioEnum.Filho);
+
+        var servico = CriarServico(usuarioRepository, currentUser);
+
+        var resultado = await servico.AlterarStatusAsync(10, new AlterarStatusUsuarioDto { Ativo = false });
+
+        Assert.False(resultado.Sucesso);
+        Assert.Equal(HttpStatusCode.Forbidden, resultado.StatusCode);
+        usuarioRepository.Verify(r => r.AtualizarAsync(It.IsAny<Usuario>()), Times.Never);
+    }
+
+    [Fact]
     public async Task RemoverAsync_QuandoIdNaoEDoUsuarioAutenticado_RetornaForbiddenENaoRemove()
     {
         var usuario = new Usuario("Filho A", "a@teste.com", "hash", PerfilUsuarioEnum.Filho);

@@ -149,6 +149,36 @@ public class UsuarioController : ControllerBase
         return StatusCode((int)HttpStatusCode.OK, usuario.ObjetoRetorno);
     }
     /// <summary>
+    /// Ativar ou inativar a conta de um filho vinculado ao Pai autenticado.
+    /// </summary>
+    /// <param name="id">ID do filho</param>
+    /// <param name="dto">Novo status da conta</param>
+    /// <returns>Resultado da operação</returns>
+    [HttpPatch]
+    [Route("AlterarStatus/{id}")]
+    [Authorize(Roles = "Pai")]
+    public async Task<IActionResult> AlterarStatus(int id, [FromBody] AlterarStatusUsuarioDto dto)
+    {
+        if (!ModelState.IsValid)
+        {
+            return BadRequest(ModelState);
+        }
+
+        var usuario = await _usuarioService.AlterarStatusAsync(id, dto);
+
+        if (!usuario.Sucesso)
+        {
+            if (usuario.StatusCode == HttpStatusCode.Forbidden)
+            {
+                return StatusCode((int)HttpStatusCode.Forbidden, usuario);
+            }
+
+            return StatusCode((int)HttpStatusCode.BadRequest, usuario);
+        }
+
+        return StatusCode((int)HttpStatusCode.OK, usuario.ObjetoRetorno);
+    }
+    /// <summary>
     /// Remover a própria conta do sistema. Se houver vínculo familiar (Pai com filhos, ou Filho vinculado a um
     /// responsável), a remoção é bloqueada com 409 Conflict até que o vínculo seja desfeito.
     /// </summary>

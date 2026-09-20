@@ -11,6 +11,7 @@ public interface IUsuarioService
     Task<RespostaMetodos<RetornoUsuarioDto?>> ObterMeuPerfilAsync();
     Task<RespostaMetodos<RetornoUsuarioDto>> CriarUsuarioAsync(CriarUsuarioDto dto);
     Task<RespostaMetodos<RetornoUsuarioDto>> AtualizarAsync(int id, AtualizarUsuarioDto dto);
+    Task<RespostaMetodos<RetornoUsuarioDto>> AlterarStatusAsync(int id, AlterarStatusUsuarioDto dto);
     Task<RespostaMetodos<RetornoUsuarioDto>> RemoverAsync(int id);
     Task<RespostaMetodos<RetornoUsuarioDto>> CriarFilhoAsync(CriarFilhoDto dto);
     Task<RespostaMetodos<RetornoLoginDto>> LoginAsync(LoginDto dto);
