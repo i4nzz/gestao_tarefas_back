@@ -13,7 +13,7 @@ namespace GestaoTarefas.Infra.Mappings
 
             builder.HasKey(x => x.Id);
 
-            builder.Property(x => x.UrlFoto)
+            builder.Property(x => x.ImagemId)
                    .IsRequired()
                    .HasMaxLength(300);
 

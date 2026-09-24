@@ -30,6 +30,15 @@ public class ComprovacaoRepository : IComprovacaoRepository
             .FirstOrDefaultAsync(c => c.Id == id);
     }
 
+    public async Task<ComprovacaoTarefa?> ObterUltimaPorTarefaAsync(int tarefaId)
+    {
+        return await _contexto.ComprovacoesTarefa
+            .Include(c => c.Tarefa)
+            .Where(c => c.TarefaId == tarefaId)
+            .OrderByDescending(c => c.DataEnvio)
+            .FirstOrDefaultAsync();
+    }
+
     public async Task AdicionarAsync(ComprovacaoTarefa comprovacao)
     {
         await _contexto.ComprovacoesTarefa.AddAsync(comprovacao);

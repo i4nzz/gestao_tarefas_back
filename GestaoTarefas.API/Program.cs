@@ -11,6 +11,7 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.Services
     .AddDatabase(builder.Configuration)
+    .AddMongoDb(builder.Configuration)
     .AddJwtAuthentication(builder.Configuration)
     .AddSwaggerConfiguration()
     .AddInfrastructure(builder.Configuration)

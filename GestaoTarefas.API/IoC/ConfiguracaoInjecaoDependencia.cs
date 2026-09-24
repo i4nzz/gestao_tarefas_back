@@ -2,6 +2,7 @@ using GestaoTarefas.Application.Interfaces;
 using GestaoTarefas.Application.Services;
 using GestaoTarefas.Domain.Interfaces;
 using GestaoTarefas.Infra.Repositories;
+using GestaoTarefas.Infra.Repositories.Mongo;
 
 namespace GestaoTarefas.Ioc;
 
@@ -26,7 +27,6 @@ public static class ConfiguracaoInjecaoDeDependencia
         services.AddScoped<IComprovacaoService, ComprovacaoService>();
         services.AddScoped<ITokenService, TokenService>();
         services.AddScoped<IEmailService, EmailService>();
-        services.AddScoped<IFileStorageService, LocalFileStorageService>();
         services.AddScoped<ICurrentUserService, CurrentUserService>();
         services.AddScoped<IAutorizacaoFamiliarService, AutorizacaoFamiliarService>();
         services.AddScoped<ICategoriaFinanceiraService, CategoriaFinanceiraService>();
@@ -40,6 +40,7 @@ public static class ConfiguracaoInjecaoDeDependencia
         services.AddScoped<IPontuacaoRepository, PontuacaoRepository>();
         services.AddScoped<IRecompensaRepository, RecompensaRepository>();
         services.AddScoped<IComprovacaoRepository, ComprovacaoRepository>();
+        services.AddScoped<IImagemComprovacaoRepository, ImagemComprovacaoRepository>();
         services.AddScoped<IResgatePontuacaoRepository, ResgatePontuacaoRepository>();
         services.AddScoped<IRefreshTokenRepository, RefreshTokenRepository>();
         services.AddScoped<ICategoriaFinanceiraRepository, CategoriaFinanceiraRepository>();

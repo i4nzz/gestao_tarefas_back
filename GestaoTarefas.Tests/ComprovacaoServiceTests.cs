@@ -17,17 +17,20 @@ public class ComprovacaoServiceTests
         Mock<IAutorizacaoFamiliarService> autorizacao,
         Mock<IComprovacaoRepository>? comprovacaoRepository = null,
         Mock<IPontuacaoRepository>? pontuacaoRepository = null,
-        Mock<IFileStorageService>? fileStorageService = null,
+        Mock<IImagemComprovacaoRepository>? imagemComprovacaoRepository = null,
         Mock<IUsuarioRepository>? usuarioRepository = null,
         Mock<IEmailService>? emailService = null)
     {
+        var comprovacaoRepo = comprovacaoRepository ?? new Mock<IComprovacaoRepository>();
+        comprovacaoRepo.Setup(r => r.ObterUltimaPorTarefaAsync(It.IsAny<int>())).ReturnsAsync((ComprovacaoTarefa?)null);
+
         return new ComprovacaoService(
-            (comprovacaoRepository ?? new Mock<IComprovacaoRepository>()).Object,
+            comprovacaoRepo.Object,
             (pontuacaoRepository ?? new Mock<IPontuacaoRepository>()).Object,
             tarefaRepository.Object,
             (usuarioRepository ?? new Mock<IUsuarioRepository>()).Object,
             (emailService ?? new Mock<IEmailService>()).Object,
-            (fileStorageService ?? new Mock<IFileStorageService>()).Object,
+            (imagemComprovacaoRepository ?? new Mock<IImagemComprovacaoRepository>()).Object,
             autorizacao.Object);
     }
 
@@ -41,10 +44,10 @@ public class ComprovacaoServiceTests
         var autorizacao = new Mock<IAutorizacaoFamiliarService>();
         autorizacao.Setup(a => a.PodeAcessarFilhoAsync(20)).ReturnsAsync(false);
 
-        var fileStorageService = new Mock<IFileStorageService>();
+        var imagemComprovacaoRepository = new Mock<IImagemComprovacaoRepository>();
         var comprovacaoRepository = new Mock<IComprovacaoRepository>();
 
-        var servico = CriarServico(tarefaRepository, autorizacao, comprovacaoRepository, fileStorageService: fileStorageService);
+        var servico = CriarServico(tarefaRepository, autorizacao, comprovacaoRepository, imagemComprovacaoRepository: imagemComprovacaoRepository);
 
         var foto = new Mock<IFormFile>();
         foto.Setup(f => f.Length).Returns(100);
@@ -54,7 +57,7 @@ public class ComprovacaoServiceTests
 
         Assert.False(resultado.Sucesso);
         Assert.Equal(HttpStatusCode.Forbidden, resultado.StatusCode);
-        fileStorageService.Verify(f => f.SalvarArquivoAsync(It.IsAny<IFormFile>(), It.IsAny<string>()), Times.Never);
+        imagemComprovacaoRepository.Verify(r => r.SalvarAsync(It.IsAny<byte[]>(), It.IsAny<string>(), It.IsAny<string>()), Times.Never);
         comprovacaoRepository.Verify(r => r.AdicionarAsync(It.IsAny<ComprovacaoTarefa>()), Times.Never);
     }
 
@@ -69,8 +72,8 @@ public class ComprovacaoServiceTests
         var autorizacao = new Mock<IAutorizacaoFamiliarService>();
         autorizacao.Setup(a => a.PodeAcessarFilhoAsync(20)).ReturnsAsync(true);
 
-        var fileStorageService = new Mock<IFileStorageService>();
-        fileStorageService.Setup(f => f.SalvarArquivoAsync(It.IsAny<IFormFile>(), It.IsAny<string>())).ReturnsAsync("Comprovacoes/foto.jpg");
+        var imagemComprovacaoRepository = new Mock<IImagemComprovacaoRepository>();
+        imagemComprovacaoRepository.Setup(r => r.SalvarAsync(It.IsAny<byte[]>(), It.IsAny<string>(), It.IsAny<string>())).ReturnsAsync("64f1a2b3c4d5e6f7a8b9c0d1");
 
         var comprovacaoRepository = new Mock<IComprovacaoRepository>();
 
@@ -85,12 +88,15 @@ public class ComprovacaoServiceTests
             tarefaRepository,
             autorizacao,
             comprovacaoRepository,
-            fileStorageService: fileStorageService,
+            imagemComprovacaoRepository: imagemComprovacaoRepository,
             usuarioRepository: usuarioRepository,
             emailService: emailService);
 
         var foto = new Mock<IFormFile>();
         foto.Setup(f => f.Length).Returns(100);
+        foto.Setup(f => f.FileName).Returns("foto.jpg");
+        foto.Setup(f => f.ContentType).Returns("image/jpeg");
+        foto.Setup(f => f.CopyToAsync(It.IsAny<Stream>(), It.IsAny<CancellationToken>())).Returns(Task.CompletedTask);
 
         var dto = new CriarComprovacaoDto { TarefaId = 5, Foto = foto.Object };
         var resultado = await servico.EnviarAsync(dto);

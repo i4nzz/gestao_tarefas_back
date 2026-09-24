@@ -6,18 +6,22 @@ using GestaoTarefas.Application.Mapping;
 using GestaoTarefas.Domain.Entities;
 using GestaoTarefas.Domain.Enum;
 using GestaoTarefas.Domain.Interfaces;
+using Microsoft.AspNetCore.Http;
 
 namespace GestaoTarefas.Application.Services;
 
 public class ComprovacaoService : IComprovacaoService
 {
+    private static readonly string[] ExtensoesPermitidas = { ".jpg", ".jpeg", ".png" };
+    private const long TamanhoMaximoBytes = 5 * 1024 * 1024; // 5MB
+
     private readonly IComprovacaoRepository _comprovacaoRepository;
     private readonly ITarefaRepository _tarefaRepository;
     private readonly IPontuacaoRepository _pontuacaoRepository;
     private readonly IUsuarioRepository _usuarioRepository;
     private readonly IEmailService _emailService;
 
-    private readonly IFileStorageService _fileStorageService;
+    private readonly IImagemComprovacaoRepository _imagemComprovacaoRepository;
     private readonly IAutorizacaoFamiliarService _autorizacao;
     public ComprovacaoService(
         IComprovacaoRepository comprovacaoRepository
@@ -25,7 +29,7 @@ public class ComprovacaoService : IComprovacaoService
         , ITarefaRepository tarefaRepository
         , IUsuarioRepository usuarioRepository
         , IEmailService emailService
-        , IFileStorageService fileStorageService
+        , IImagemComprovacaoRepository imagemComprovacaoRepository
         , IAutorizacaoFamiliarService autorizacao
         )
     {
@@ -34,7 +38,7 @@ public class ComprovacaoService : IComprovacaoService
         _pontuacaoRepository = pontuacaoRepository;
         _usuarioRepository = usuarioRepository;
         _emailService = emailService;
-        _fileStorageService = fileStorageService;
+        _imagemComprovacaoRepository = imagemComprovacaoRepository;
         _autorizacao = autorizacao;
     }
 
@@ -151,9 +155,9 @@ public class ComprovacaoService : IComprovacaoService
             };
         }
 
-        var arquivo = await _fileStorageService.ObterArquivoAsync(comprovacao.UrlFoto);
+        var imagem = await _imagemComprovacaoRepository.ObterPorIdAsync(comprovacao.ImagemId);
 
-        if (arquivo == null)
+        if (imagem == null)
         {
             return new RespostaMetodos<(byte[], string)?>
             {
@@ -165,7 +169,7 @@ public class ComprovacaoService : IComprovacaoService
         return new RespostaMetodos<(byte[], string)?>
         {
             Sucesso = true,
-            ObjetoRetorno = arquivo
+            ObjetoRetorno = (imagem.Conteudo, imagem.ContentType)
         };
     }
 
@@ -203,26 +207,58 @@ public class ComprovacaoService : IComprovacaoService
             };
         }
 
-        string caminhoArquivo = string.Empty;
+        var erroValidacao = ValidarFoto(dto.Foto);
 
-        try
-        {
-            caminhoArquivo = await _fileStorageService.SalvarArquivoAsync(dto.Foto, "Comprovacoes");
-        }
-
-        catch (ArgumentException ex)
+        if (erroValidacao != null)
         {
             return new RespostaMetodos<RetornoComprovacaoDto>
             {
                 Sucesso = false,
                 ObjetoRetorno = null,
-                Mensagem = ex.Message
+                Mensagem = erroValidacao
             };
         }
 
-        var comprovacao = new ComprovacaoTarefa(dto.TarefaId, caminhoArquivo);
+        byte[] conteudoFoto;
 
-        await _comprovacaoRepository.AdicionarAsync(comprovacao);
+        using (var memoryStream = new MemoryStream())
+        {
+            await dto.Foto.CopyToAsync(memoryStream);
+            conteudoFoto = memoryStream.ToArray();
+        }
+
+        var comprovacaoExistente = await _comprovacaoRepository.ObterUltimaPorTarefaAsync(dto.TarefaId);
+
+        ComprovacaoTarefa comprovacao;
+
+        if (comprovacaoExistente != null)
+        {
+            if (comprovacaoExistente.Status != StatusValidacaoTarefaEnum.Pendente)
+            {
+                return new RespostaMetodos<RetornoComprovacaoDto>
+                {
+                    Sucesso = false,
+                    ObjetoRetorno = null,
+                    Mensagem = "Esta tarefa já possui uma comprovação validada (aprovada ou reprovada) e não permite o envio de uma nova foto."
+                };
+            }
+
+            await _imagemComprovacaoRepository.AtualizarAsync(comprovacaoExistente.ImagemId, conteudoFoto, dto.Foto.ContentType, dto.Foto.FileName);
+
+            comprovacaoExistente.SubstituirFoto();
+
+            await _comprovacaoRepository.AtualizarAsync(comprovacaoExistente);
+
+            comprovacao = comprovacaoExistente;
+        }
+        else
+        {
+            var imagemId = await _imagemComprovacaoRepository.SalvarAsync(conteudoFoto, dto.Foto.ContentType, dto.Foto.FileName);
+
+            comprovacao = new ComprovacaoTarefa(dto.TarefaId, imagemId);
+
+            await _comprovacaoRepository.AdicionarAsync(comprovacao);
+        }
 
         await NotificarPaisAsync(tarefa);
 
@@ -233,6 +269,28 @@ public class ComprovacaoService : IComprovacaoService
             Sucesso = true,
             ObjetoRetorno = retornoComprovacao
         };
+    }
+
+    private static string? ValidarFoto(IFormFile foto)
+    {
+        if (foto.Length == 0)
+        {
+            return "Arquivo inválido ou vazio.";
+        }
+
+        if (foto.Length > TamanhoMaximoBytes)
+        {
+            return "Arquivo excede o tamanho máximo permitido (5MB).";
+        }
+
+        var extensao = Path.GetExtension(foto.FileName).ToLowerInvariant();
+
+        if (!ExtensoesPermitidas.Contains(extensao))
+        {
+            return "Tipo de arquivo não permitido. Use JPG ou PNG.";
+        }
+
+        return null;
     }
 
     public async Task<RespostaMetodos<RetornoComprovacaoDto>> ValidarAsync(int id, bool aprovar)
