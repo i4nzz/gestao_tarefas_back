@@ -1,4 +1,6 @@
-﻿namespace GestaoTarefas.Domain.Entities;
+using GestaoTarefas.Domain.Enum;
+
+namespace GestaoTarefas.Domain.Entities;
 
 public class Tarefa
 {
@@ -12,4 +14,27 @@ public class Tarefa
     public bool Arquivada { get; set; }
     public Usuario Filho { get; set; } = null!;
     public ICollection<ComprovacaoTarefa> Comprovacoes { get; set; } = new List<ComprovacaoTarefa>();
+
+    /// <summary>
+    /// Status calculado a partir do prazo e das comprovações; não é gravado no banco.
+    /// </summary>
+    public StatusTarefaEnum CalcularStatus(DateTime agoraUtc)
+    {
+        if (Comprovacoes.Any(c => c.Status == StatusValidacaoTarefaEnum.Aprovada))
+        {
+            return StatusTarefaEnum.Concluida;
+        }
+
+        if (Comprovacoes.Any(c => c.Status == StatusValidacaoTarefaEnum.Pendente))
+        {
+            return StatusTarefaEnum.AguardandoValidacao;
+        }
+
+        if (Prazo < agoraUtc)
+        {
+            return StatusTarefaEnum.Expirada;
+        }
+
+        return StatusTarefaEnum.Pendente;
+    }
 }

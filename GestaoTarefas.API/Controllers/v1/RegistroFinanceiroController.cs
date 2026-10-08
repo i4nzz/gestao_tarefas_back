@@ -53,7 +53,7 @@ public class RegistroFinanceiroController : ControllerBase
     /// </summary>
     [HttpGet]
     [Route("ObterResumo/{filhoId}")]
-    [Authorize(Roles = "Pai,Filho")]
+    [Authorize(Roles = "Pai")]
     public async Task<IActionResult> ObterResumo(int filhoId)
     {
         var resumo = await _registroFinanceiroService.ObterResumoPorFilhoAsync(filhoId);

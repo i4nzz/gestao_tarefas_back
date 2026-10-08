@@ -32,6 +32,8 @@ public static class ConfiguracaoInjecaoDeDependencia
         services.AddScoped<ICategoriaFinanceiraService, CategoriaFinanceiraService>();
         services.AddScoped<IMesadaService, MesadaService>();
         services.AddScoped<IRegistroFinanceiroService, RegistroFinanceiroService>();
+        services.AddScoped<IQuestionarioService, QuestionarioService>();
+        services.AddScoped<IRelatorioService, RelatorioService>();
         #endregion
 
         #region Repositories
@@ -46,6 +48,8 @@ public static class ConfiguracaoInjecaoDeDependencia
         services.AddScoped<ICategoriaFinanceiraRepository, CategoriaFinanceiraRepository>();
         services.AddScoped<IMesadaRepository, MesadaRepository>();
         services.AddScoped<IRegistroFinanceiroRepository, RegistroFinanceiroRepository>();
+        services.AddScoped<IBancoQuestionarioRepository, BancoQuestionarioRepository>();
+        services.AddScoped<IRespostaQuestionarioRepository, RespostaQuestionarioRepository>();
         #endregion
 
         return services;

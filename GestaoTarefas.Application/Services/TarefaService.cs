@@ -338,23 +338,5 @@ public class TarefaService : ITarefaService
         };
     }
 
-    private static StatusTarefaEnum CalcularStatus(Tarefa tarefa)
-    {
-        if (tarefa.Comprovacoes.Any(c => c.Status == StatusValidacaoTarefaEnum.Aprovada))
-        {
-            return StatusTarefaEnum.Concluida;
-        }
-
-        if (tarefa.Comprovacoes.Any(c => c.Status == StatusValidacaoTarefaEnum.Pendente))
-        {
-            return StatusTarefaEnum.AguardandoValidacao;
-        }
-
-        if (tarefa.Prazo < DateTime.UtcNow)
-        {
-            return StatusTarefaEnum.Expirada;
-        }
-
-        return StatusTarefaEnum.Pendente;
-    }
+    private static StatusTarefaEnum CalcularStatus(Tarefa tarefa) => tarefa.CalcularStatus(DateTime.UtcNow);
 }
